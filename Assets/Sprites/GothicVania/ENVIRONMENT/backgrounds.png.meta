@@ -49,7 +49,7 @@ TextureImporter:
   maxTextureSize: 2048
   textureSettings:
     serializedVersion: 2
-    filterMode: 1
+    filterMode: 0
     aniso: 1
     mipBias: 0
     wrapU: 1
@@ -59,11 +59,11 @@ TextureImporter:
   lightmap: 0
   compressionQuality: 50
   spriteMode: 2
-  spriteExtrude: 1
-  spriteMeshType: 1
+  spriteExtrude: 0
+  spriteMeshType: 0
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 100
+  spritePixelsToUnits: 16
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -87,7 +87,7 @@ TextureImporter:
     maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
-    textureCompression: 1
+    textureCompression: 0
     compressionQuality: 50
     crunchedCompression: 0
     allowsAlphaSplitting: 0
@@ -138,111 +138,111 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: backgrounds_0
+      name: fondo_ventana
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 161
+        width: 160
         height: 192
-      alignment: 0
-      pivot: {x: 0, y: 0}
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 5730b6a401e501f30800000000000000
-      internalID: 4544235448077845365
+      spriteID: 36960074913542c4d91570e5c29ea90c
+      internalID: -1673278284
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: backgrounds_1
+      name: fondo_pilar
       rect:
         serializedVersion: 2
-        x: 175
+        x: 176
         y: 0
-        width: 130
+        width: 128
         height: 192
-      alignment: 0
-      pivot: {x: 0, y: 0}
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 14353968f63dad320800000000000000
-      internalID: 2583609812203033409
+      spriteID: ed818a63407016247ab9e414063d2e6e
+      internalID: 2100277176
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: backgrounds_2
+      name: fondo_altar
       rect:
         serializedVersion: 2
-        x: 319
+        x: 320
         y: 0
-        width: 130
+        width: 128
         height: 192
-      alignment: 0
-      pivot: {x: 0, y: 0}
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 46eeed1b95819a550800000000000000
-      internalID: 6172491537803308644
+      spriteID: 986982baeef48f24f864ff54cb9a9ce5
+      internalID: 685916852
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: backgrounds_3
+      name: fondo_gargola
       rect:
         serializedVersion: 2
-        x: 463
+        x: 464
         y: 0
-        width: 82
+        width: 80
         height: 192
-      alignment: 0
-      pivot: {x: 0, y: 0}
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 1e4d7489493ae2060800000000000000
-      internalID: 6930656735175103713
+      spriteID: ef6787d0e6eb6ff448e6abdbf95f0911
+      internalID: -541451485
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: backgrounds_4
+      name: fondo_antorcha
       rect:
         serializedVersion: 2
-        x: 559
+        x: 560
         y: 0
-        width: 65
+        width: 64
         height: 192
-      alignment: 0
-      pivot: {x: 0, y: 0}
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: e0dc731c2daf6da40800000000000000
-      internalID: 5392773386914483470
+      spriteID: 9f987d405e92dc44386779f0457ccf15
+      internalID: -260286945
       vertices: []
       indices: 
       edges: []
@@ -251,7 +251,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 
+    spriteID: d240782ad51c45e4791d34be42b7c233
     internalID: 0
     vertices: []
     indices: 
@@ -261,11 +261,11 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      backgrounds_0: 4544235448077845365
-      backgrounds_1: 2583609812203033409
-      backgrounds_2: 6172491537803308644
-      backgrounds_3: 6930656735175103713
-      backgrounds_4: 5392773386914483470
+      fondo_altar: 685916852
+      fondo_antorcha: -260286945
+      fondo_gargola: -541451485
+      fondo_pilar: 2100277176
+      fondo_ventana: -1673278284
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
