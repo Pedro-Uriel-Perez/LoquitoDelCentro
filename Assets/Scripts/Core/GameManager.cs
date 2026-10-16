@@ -12,8 +12,8 @@ public class GameManager : MonoBehaviour
     public const string VictoryScene = "Victoria";
     public const int TotalCollectibles = 4;
 
-    /// <summary>Orden de juego: índice = número de nivel (0 = El centro, 1..4 = mazmorras).</summary>
-    public static readonly string[] LevelScenes = { "Nivel0", "Mazmorra1", "Mazmorra2", "Mazmorra3", "Mazmorra4" };
+    /// <summary>Orden de juego: índice = número de nivel (0 = el jardín, 1..3 = mazmorras).</summary>
+    public static readonly string[] LevelScenes = { "Jardin", "Mazmorra1", "Mazmorra2", "Mazmorra3" };
 
     private static GameManager instance;
 
@@ -64,7 +64,7 @@ public class GameManager : MonoBehaviour
         LoadScene(LevelScenes[0]);
     }
 
-    /// <summary>Pasa al nivel siguiente al número indicado (0 = El centro, 1 = Mazmorra 1...), o a la victoria tras el último.</summary>
+    /// <summary>Pasa al nivel siguiente al número indicado (0 = el jardín, 1 = Mazmorra 1...), o a la victoria tras el último.</summary>
     public void CompleteLevel(int levelNumber)
     {
         int next = levelNumber + 1;

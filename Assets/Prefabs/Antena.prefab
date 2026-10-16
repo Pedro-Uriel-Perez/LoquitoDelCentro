@@ -144,3 +144,5 @@ MonoBehaviour:
   requiredBoss: {fileID: 0}
   interactRange: 2.5
   levelCompleteDelay: 3.5
+  prompt: 'E / Y: Derribar la antena'
+  destroyedMessage: "\xA1Antena derribada!"

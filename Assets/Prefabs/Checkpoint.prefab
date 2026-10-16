@@ -104,6 +104,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7761013349354071074}
   - component: {fileID: 2855387629395957447}
+  - component: {fileID: 4862076242830777121}
   m_Layer: 0
   m_Name: Cama
   m_TagString: Untagged
@@ -120,7 +121,7 @@ Transform:
   m_GameObject: {fileID: 6682862561313130704}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -1.4, y: 0, z: 0}
+  m_LocalPosition: {x: -1.5, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -180,11 +181,37 @@ SpriteRenderer:
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 3.375, y: 2.9375}
+  m_Size: {x: 3.25, y: 1.5}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!114 &4862076242830777121
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6682862561313130704}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3984395b04fbed94b91c5d0abc8e831c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SpriteAnim
+  spriteTarget: {fileID: 0}
+  imageTarget: {fileID: 0}
+  clips:
+  - name: cama
+    frames:
+    - {fileID: 21300000, guid: 33ca64125dfee1a4a916e0b75f495454, type: 3}
+    - {fileID: 21300000, guid: a82c3e1c73ccc5a47a0ed7ed80a9dde4, type: 3}
+    - {fileID: 21300000, guid: 6562278f719f88f4598a8d107fd67b5e, type: 3}
+    - {fileID: 21300000, guid: f884bda1fb7c0d845876997b3f8cd7b6, type: 3}
+    - {fileID: 21300000, guid: bf060b7018884a6458eff51f7651cf59, type: 3}
+    fps: 4
+    loop: 1
+  playOnStart: cama
+  unscaledTime: 0
 --- !u!1 &7822385886669417027
 GameObject:
   m_ObjectHideFlags: 0
@@ -272,7 +299,7 @@ SpriteRenderer:
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 2.375, y: 3.3125}
+  m_Size: {x: 2.375, y: 3.125}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1

@@ -9,8 +9,8 @@ EditorBuildSettings:
     path: Assets/Scenes/Inicio.unity
     guid: a1baf6746f2819f47b5d44ff3c7ef52a
   - enabled: 1
-    path: Assets/Scenes/Nivel0.unity
-    guid: 782de51d96ae66443991bbf2af103302
+    path: Assets/Scenes/Jardin.unity
+    guid: fe39a1e67ffe3de4aa685f91946fa3e5
   - enabled: 1
     path: Assets/Scenes/Mazmorra1.unity
     guid: ef2ffb13142f33e47ae1195255b34dc4
@@ -21,14 +21,8 @@ EditorBuildSettings:
     path: Assets/Scenes/Mazmorra3.unity
     guid: 969aa0d4a3f9bd04cab10433cd523300
   - enabled: 1
-    path: Assets/Scenes/Mazmorra4.unity
-    guid: ecae64f61c49c3e4a90153ba7ac65720
-  - enabled: 1
     path: Assets/Scenes/Victoria.unity
     guid: 879bec2a28681b9488f6891f88975ee5
-  - enabled: 1
-    path: Assets/Scenes/NivelPrueba.unity
-    guid: 97e87f520b83e814e82b4b1c77a04c10
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
   m_UseUCBPForAssetBundles: 0

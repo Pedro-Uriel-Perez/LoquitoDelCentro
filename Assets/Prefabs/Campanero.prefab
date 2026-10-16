@@ -206,6 +206,9 @@ MonoBehaviour:
   telegraphColor: {r: 1, g: 0.55, b: 0.3, a: 1}
   attacksBeforeTired: 6
   tiredTime: 2
+  walkSpeed: 2
+  maxWalkTime: 1.6
+  walkChance: 0.6
   damage: 1
   clubOffset: {x: 2.6, y: 1.2}
   clubSize: {x: 3.6, y: 2.8}
@@ -215,7 +218,7 @@ MonoBehaviour:
   chanclaPrefab: {fileID: 4287037181889776308, guid: 67f57b90c00f8234d99ccf1a6c462135, type: 3}
   throwPoint: {fileID: 2274539932057588967}
   chanclasPerThrow: 1
-  aimAtPlayer: 0
+  aimAtPlayer: 1
 --- !u!114 &7256855891964101445
 MonoBehaviour:
   m_ObjectHideFlags: 0

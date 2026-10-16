@@ -11,6 +11,8 @@ public class Antenna : MonoBehaviour
     [SerializeField] private BossCampanero requiredBoss;
     [SerializeField] private float interactRange = 2.5f;
     [SerializeField] private float levelCompleteDelay = 3.5f;
+    [SerializeField] private string prompt = "E / Y: Derribar la antena";
+    [SerializeField] private string destroyedMessage = "¡Antena derribada!";
 
     private Transform player;
     private LoquitoInput input;
@@ -38,8 +40,8 @@ public class Antenna : MonoBehaviour
 
         if (HUD.Instance != null)
         {
-            string prompt = !near ? null : bossAlive ? "La antena está protegida. ¡Derrota al Campanero!" : "E / Y: Derribar la antena";
-            HUD.Instance.SetPrompt(this, prompt);
+            string text = !near ? null : bossAlive ? "La antena está protegida. ¡Derrota al Campanero!" : prompt;
+            HUD.Instance.SetPrompt(this, text);
         }
 
         if (near && !bossAlive && input != null && input.Interact.WasPressedThisFrame())
@@ -52,7 +54,7 @@ public class Antenna : MonoBehaviour
         if (HUD.Instance != null)
         {
             HUD.Instance.SetPrompt(this, null);
-            HUD.Instance.ShowMessage("¡Antena derribada!", levelCompleteDelay);
+            HUD.Instance.ShowMessage(destroyedMessage, levelCompleteDelay);
         }
         if (anim != null) anim.Play("rota");
 

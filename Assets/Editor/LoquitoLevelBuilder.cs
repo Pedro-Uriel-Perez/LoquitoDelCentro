@@ -19,7 +19,9 @@ using UnityEngine.Tilemaps;
 ///   D  duende                   E  esbirro alado            A  ángel blanco
 ///   G  compuerta del jefe       J  jefe (campanero)         N  antena
 ///   [ ]  esquinas inferior-izquierda y superior-derecha del interior de la arena
-///   M  Martha la Loca (Nivel 0)  X  puerta de salida del nivel
+///   M  Martha la Loca (jardín)    X  puerta de salida del nivel
+///   Q  duende inmóvil (jardín)
+///   1..6  carteles del jardín: 1 mover, 2 saltar, 3 doble salto, 4 atacar, 5 bloquear, 6 interactuar
 /// </summary>
 public static class LoquitoLevelBuilder
 {
@@ -30,25 +32,28 @@ public static class LoquitoLevelBuilder
 
     class LevelData
     {
-        public int number; public string name, bossName, itemKey, itemName, itemDesc;
-        public float telegraph, pause; public int chanclas; public bool aim;
+        public int number, collectibleId; public string name, theme = "templo", bossName, itemKey, itemName, itemDesc;
+        public float telegraph, pause; public int chanclas;
+        public bool IsPark => theme == "parque";
     }
 
-    static readonly LevelData Centro = new LevelData { number = 0, name = "El centro" };
+    static readonly LevelData Jardin = new LevelData { number = 0, name = "El Jardín", theme = "parque", collectibleId = 1, itemKey = "bolsa",
+        itemName = "Bolsa de vagabundo", itemDesc = "Como la del Chavo del 8." };
 
-    static string SceneName(LevelData d) => d.number == 0 ? "Nivel0" : $"Mazmorra{d.number}";
+    static string SceneName(LevelData d) => d.number == 0 ? "Jardin" : $"Mazmorra{d.number}";
 
     static readonly LevelData[] Levels =
     {
-        new LevelData { number = 1, name = "Templo del Reloj", bossName = "El Campanero del Reloj", itemKey = "bolsa",
-            itemName = "Bolsa de vagabundo", itemDesc = "Como la del Chavo del 8.", telegraph = 0.5f, pause = 1.0f, chanclas = 1, aim = false },
-        new LevelData { number = 2, name = "Templo del Pozo", bossName = "El Campanero del Pozo", itemKey = "lata_frijoles",
-            itemName = "Lata de frijoles", itemDesc = "Mejor esto a un suaperro.", telegraph = 0.45f, pause = 0.85f, chanclas = 2, aim = false },
-        new LevelData { number = 3, name = "Templo de la Campana Rota", bossName = "El Campanero de la Campana Rota", itemKey = "lata_coca",
-            itemName = "Lata de coca", itemDesc = "Ya junté 3 kilos de lata, puedo comprarme una de verdad.", telegraph = 0.4f, pause = 0.75f, chanclas = 1, aim = true },
-        new LevelData { number = 4, name = "Templo del Campanario Mayor", bossName = "El Campanero Mayor", itemKey = "caja_madera",
-            itemName = "Cajita de madera", itemDesc = "¡¡¡Mi trono!!!", telegraph = 0.35f, pause = 0.65f, chanclas = 2, aim = true },
+        new LevelData { number = 1, collectibleId = 2, name = "Templo del Reloj", bossName = "El Campanero del Reloj", itemKey = "lata_frijoles",
+            itemName = "Lata de frijoles", itemDesc = "Mejor esto a un suaperro.", telegraph = 0.5f, pause = 1.0f, chanclas = 1 },
+        new LevelData { number = 2, collectibleId = 3, name = "Templo del Pozo", bossName = "El Campanero del Pozo", itemKey = "lata_coca",
+            itemName = "Lata de coca", itemDesc = "Ya junté 3 kilos de lata, puedo comprarme una de verdad.", telegraph = 0.45f, pause = 0.85f, chanclas = 2 },
+        new LevelData { number = 3, collectibleId = 4, name = "Templo de la Campana Rota", bossName = "El Campanero de la Campana Rota", itemKey = "caja_madera",
+            itemName = "Cajita de madera", itemDesc = "¡¡¡Mi trono!!!", telegraph = 0.4f, pause = 0.75f, chanclas = 2 },
     };
+
+    static readonly Color SkyColor = new Color32(35, 137, 225, 255);
+    static readonly Color DungeonColor = new Color32(39, 38, 56, 255);
 
     // ======================================================================
     [MenuItem("Loquito/Construir todo")]
@@ -59,13 +64,14 @@ public static class LoquitoLevelBuilder
         ConfigureTiles();
         UpdateLoquito();
         BuildPrefabs();
-        BuildLevel(Centro);
+        BuildLevel(Jardin);
         foreach (var l in Levels) BuildLevel(l);
         BuildTitleScene();
         BuildVictoryScene();
+        DeleteOldScenes();
         UpdateBuildSettings();
         EditorSceneManager.OpenScene("Assets/Scenes/Inicio.unity");
-        Debug.Log("[Loquito] Escenas construidas: Inicio, Nivel0, Mazmorra1-4, Victoria.");
+        Debug.Log("[Loquito] Escenas construidas: Inicio, Jardin, Mazmorra1-3, Victoria.");
     }
 
     [MenuItem("Loquito/Construir solo mazmorras")]
@@ -73,8 +79,15 @@ public static class LoquitoLevelBuilder
     {
         if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
         ConfigureTiles();
-        BuildLevel(Centro);
+        BuildLevel(Jardin);
         foreach (var l in Levels) BuildLevel(l);
+    }
+
+    /// <summary>Escenas que ya no forman parte del juego (el juego son 6 escenas).</summary>
+    static void DeleteOldScenes()
+    {
+        foreach (var n in new[] { "Nivel0", "Mazmorra4", "NivelPrueba", "SampleScene" })
+            AssetDatabase.DeleteAsset($"Assets/Scenes/{n}.unity");
     }
 
     /// <summary>
@@ -87,6 +100,16 @@ public static class LoquitoLevelBuilder
         {
             var t = AssetDatabase.LoadAssetAtPath<Tile>($"{Tiles}tile_c{c}_r{r}.asset");
             if (t == null || t.colliderType == Tile.ColliderType.Grid) continue;
+            t.colliderType = Tile.ColliderType.Grid;
+            EditorUtility.SetDirty(t);
+        }
+        if (!AssetDatabase.IsValidFolder(Tiles + "Parque")) AssetDatabase.CreateFolder(Tiles.TrimEnd('/'), "Parque");
+        foreach (var n in new[] { "pasto", "tierra", "tierra_oscura" })
+        {
+            string path = $"{Tiles}Parque/{n}.asset";
+            var t = AssetDatabase.LoadAssetAtPath<Tile>(path);
+            if (t == null) { t = ScriptableObject.CreateInstance<Tile>(); AssetDatabase.CreateAsset(t, path); }
+            t.sprite = S($"Parque/Tiles/{n}.png");
             t.colliderType = Tile.ColliderType.Grid;
             EditorUtility.SetDirty(t);
         }
@@ -107,14 +130,16 @@ public static class LoquitoLevelBuilder
                 string p = AssetDatabase.GUIDToAssetPath(g);
                 var imp = AssetImporter.GetAtPath(p) as TextureImporter;
                 if (imp == null) continue;
-                bool center = p.Contains("/Esbirro/") || p.Contains("chancla_proyectil");
-                bool changed = imp.textureType != TextureImporterType.Sprite || imp.spritePixelsPerUnit != 16 || imp.filterMode != FilterMode.Point
+                bool center = p.Contains("/Esbirro/") || p.Contains("chancla_proyectil") || p.Contains("/Parque/Tiles/");
+                int ppu = p.Contains("/Parque/Carteles/") || p.Contains("/Parque/Fondos/") ? 32 : 16;
+                bool changed = imp.textureType != TextureImporterType.Sprite || imp.spritePixelsPerUnit != ppu || imp.filterMode != FilterMode.Point
                                || imp.textureCompression != TextureImporterCompression.Uncompressed;
                 var s = new TextureImporterSettings(); imp.ReadTextureSettings(s);
                 int align = (int)(center ? SpriteAlignment.Center : SpriteAlignment.BottomCenter);
                 changed |= s.spriteAlignment != align;
                 if (!changed) continue;
-                imp.textureType = TextureImporterType.Sprite; imp.spriteImportMode = SpriteImportMode.Single; imp.spritePixelsPerUnit = 16;
+                imp.textureType = TextureImporterType.Sprite; imp.spriteImportMode = SpriteImportMode.Single; imp.spritePixelsPerUnit = ppu;
+                imp.maxTextureSize = 4096;
                 imp.filterMode = FilterMode.Point; imp.textureCompression = TextureImporterCompression.Uncompressed; imp.mipmapEnabled = false;
                 imp.ReadTextureSettings(s); s.spriteAlignment = align; s.spriteMeshType = SpriteMeshType.FullRect; imp.SetTextureSettings(s);
                 imp.SaveAndReimport();
@@ -156,7 +181,8 @@ public static class LoquitoLevelBuilder
         var cp = new GameObject("Checkpoint");
         var cpc = cp.AddComponent<BoxCollider2D>(); cpc.isTrigger = true; cpc.size = new Vector2(4f, 3f); cpc.offset = new Vector2(0, 1.5f);
         cp.AddComponent<Checkpoint>();
-        var cama = Child(cp, "Cama", new Vector3(-1.4f, 0, 0)); var csr = cama.AddComponent<SpriteRenderer>(); csr.sprite = Frames("Objetos/cama")[0]; csr.sortingOrder = -3;
+        var cama = Child(cp, "Cama", new Vector3(-1.5f, 0, 0)); var csr = cama.AddComponent<SpriteRenderer>(); csr.sprite = Frames("Objetos/cama")[0]; csr.sortingOrder = -3;
+        SetClips(cama.AddComponent<SpriteAnim>(), "cama", ("cama", Frames("Objetos/cama"), 4f, true));
         var fog = Child(cp, "Fogata", new Vector3(1.3f, 0, 0)); var fsr = fog.AddComponent<SpriteRenderer>(); fsr.sprite = Frames("Objetos/fogata")[0]; fsr.sortingOrder = -2;
         SetClips(fog.AddComponent<SpriteAnim>(), "fuego", ("fuego", Frames("Objetos/fogata"), 10f, true));
         SavePrefab(cp, "Checkpoint");
@@ -173,7 +199,7 @@ public static class LoquitoLevelBuilder
         var ch = new GameObject("Chancla");
         var chsr = ch.AddComponent<SpriteRenderer>(); chsr.sprite = S("Enemigos/Campanero/chancla_proyectil.png"); chsr.sortingOrder = 12;
         var proj = ch.AddComponent<Projectile>();
-        Set(proj, "speed", 9f); Set(proj, "radius", 0.45f); Set(proj, "spinSpeed", 720f); Set(proj, "lifetime", 5f);
+        Set(proj, "speed", 6f); Set(proj, "radius", 0.45f); Set(proj, "spinSpeed", 720f); Set(proj, "lifetime", 5f);
         Set(proj, "playerLayer", jug); Set(proj, "groundLayer", suelo);
         var chanclaPrefab = SavePrefab(ch, "Chancla");
 
@@ -202,6 +228,18 @@ public static class LoquitoLevelBuilder
             Set(root.GetComponent<FlyingEnemy>(), "groundLayer", suelo);
             root.GetComponent<CircleCollider2D>().radius = 1f;
         });
+
+        // Duende inmóvil: copia del duende sin patrulla ni saltos (sí hace daño al tocarlo)
+        {
+            var root = PrefabUtility.LoadPrefabContents(Prefabs + "Duende.prefab");
+            foreach (var c in new Component[] { root.GetComponent<EnemyPatrol>(), root.GetComponent<RandomJumper>() }) if (c != null) Object.DestroyImmediate(c);
+            var vis = root.transform.Find("Sprite");
+            var an = vis.GetComponent<Animator>(); if (an != null) Object.DestroyImmediate(an);
+            vis.GetComponent<SpriteRenderer>().sprite = Frames("Enemigos/Duende/saltar")[0];
+            root.name = "DuendeQuieto";
+            PrefabUtility.SaveAsPrefabAsset(root, Prefabs + "DuendeQuieto.prefab");
+            PrefabUtility.UnloadPrefabContents(root);
+        }
 
         // Martha la Loca
         var martha = new GameObject("MarthaLaLoca");
@@ -268,6 +306,11 @@ public static class LoquitoLevelBuilder
 
         TileBase TileFor(int x, int y)
         {
+            if (data.IsPark)
+            {
+                if (!Solid(x, y + 1)) return ParkTile("pasto");
+                return Solid(x, y + 2) && Solid(x, y + 3) ? ParkTile("tierra_oscura") : ParkTile("tierra");
+            }
             int pair = ((x / 2) * 7 + (y / 2) * 3) % 2 == 0 ? 1 : 4;   // alterna los dos estilos de bloque
             int c = pair + (x % 2);
             if (!Solid(x, y + 1)) return T(c, 7);                       // cara superior
@@ -309,7 +352,15 @@ public static class LoquitoLevelBuilder
             hb.offset = new Vector2((bx0 + bx1 + 1) / 2f, (by0 + by1 + 1) / 2f);
             hb.size = new Vector2(bx1 - bx0 + 1, by1 - by0 + 1);
             Set(wall.AddComponent<Health>(), "maxHealth", 1);
-            Set(wall.AddComponent<SecretWall>(), "message", data.number == 0 ? "" : "¡Un cuarto secreto!");
+            Set(wall.AddComponent<SecretWall>(), "message", "¡Un cuarto secreto!");
+
+            // Cubierta: tapa el interior del cuarto para que el coleccionable no se vea desde afuera.
+            // Es hija del muro falso, así que desaparece cuando el muro se rompe. No tiene colisión.
+            var cover = Child(wall, "Cubierta", Vector3.zero); cover.layer = 0;
+            var cmap = cover.AddComponent<Tilemap>(); cover.AddComponent<TilemapRenderer>().sortingOrder = 9;
+            foreach (int row in breakable.Select(b => b.y).Distinct())
+                for (int x = bx1 + 1; x < W && !Solid(x, row); x++)
+                    cmap.SetTile(new Vector3Int(x, row, 0), data.IsPark ? ParkTile("tierra") : T(1 + (x % 2), 8));   // relleno liso, sin "superficie"
         }
 
         // ---- Entidades ----
@@ -338,9 +389,21 @@ public static class LoquitoLevelBuilder
                     var bgo = Spawn("Campanero", cx, y, enemies);
                     boss = bgo.GetComponent<BossCampanero>();
                     Set(boss, "bossName", data.bossName); Set(boss, "telegraphTime", data.telegraph); Set(boss, "pauseBetweenAttacks", data.pause);
-                    Set(boss, "chanclasPerThrow", data.chanclas); Set(boss, "aimAtPlayer", data.aim);
+                    Set(boss, "chanclasPerThrow", data.chanclas); Set(boss, "aimAtPlayer", true);
                     break;
-                case 'N': antenna = Spawn("Antena", cx, y, objects).GetComponent<Antenna>(); break;
+                case 'N':
+                    antenna = Spawn("Antena", cx, y, objects).GetComponent<Antenna>();
+                    if (data.IsPark)
+                    {
+                        Set(antenna, "prompt", "E / Y: Derribar la torre de radio");
+                        Set(antenna, "destroyedMessage", "¡Torre de radio derribada!");
+                    }
+                    break;
+                case 'Q':
+                    var dq = Spawn("DuendeQuieto", cx, y + 0.1f, enemies);
+                    dq.transform.localScale = new Vector3(-1f, 1f, 1f);   // mira hacia donde llega el jugador
+                    break;
+                case '1': case '2': case '3': case '4': case '5': case '6': CreateSign(c, cx, y, objects); break;
                 case 'K': CreateCollectible(data, cx, y + 0.3f, objects); break;
                 case 'M': Spawn("MarthaLaLoca", cx, y, objects); break;
                 case 'X': CreateExit(cx, y, objects); break;
@@ -379,11 +442,23 @@ public static class LoquitoLevelBuilder
             Set(ph, "killHeight", -6f);
         }
         var cam = CreateCamera(player != null ? player.transform : null, new Vector2(CamHalfW, CamHalfH), new Vector2(W - CamHalfW, H - CamHalfH));
+        if (data.IsPark) cam.backgroundColor = SkyColor;
         Vector3 camStart = cam.transform.position;
 
         // ---- Fondos con parallax y decoración ----
-        CreateParallax(camStart, W);
-        Decorate(data.number, W, H, At, Solid, entities);
+        if (data.IsPark)
+        {
+            CreateParkBackground(camStart, W);
+            // Vacío oscuro bajo el piso: lo que se ve al asomarse a un hueco
+            var abyss = new GameObject("Vacio");
+            var asr = abyss.AddComponent<SpriteRenderer>();
+            asr.sprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/Cuadrado.png");   // 1x1 unidad, blanco
+            asr.color = new Color32(28, 20, 24, 255); asr.sortingOrder = -15;
+            abyss.transform.position = new Vector3(W / 2f, 2.6f - 20f, 0);
+            abyss.transform.localScale = new Vector3(W + 40, 40, 1);
+        }
+        else CreateParallax(camStart, W);
+        Decorate(data, W, H, At, Solid, entities);
 
         // ---- Datos del nivel y HUD ----
         var info = new GameObject("Nivel").AddComponent<LevelInfo>();
@@ -414,8 +489,45 @@ public static class LoquitoLevelBuilder
         var sr = go.AddComponent<SpriteRenderer>(); sr.sprite = S($"Objetos/coleccionable_{data.itemKey}.png"); sr.sortingOrder = 8;
         var col = go.AddComponent<CircleCollider2D>(); col.isTrigger = true; col.radius = 0.8f; col.offset = new Vector2(0, 0.7f);
         var c = go.AddComponent<Collectible>();
-        Set(c, "id", data.number); Set(c, "displayName", data.itemName); Set(c, "description", data.itemDesc);
+        Set(c, "id", data.collectibleId); Set(c, "displayName", data.itemName); Set(c, "description", data.itemDesc);
         Set(c, "bigSprite", S($"UI/coleccionable_{data.itemKey}.png"));
+    }
+
+    static readonly Dictionary<char, string> SignNames = new Dictionary<char, string>
+    {
+        { '1', "cartel_mover" }, { '2', "cartel_saltar" }, { '3', "cartel_doble_salto" },
+        { '4', "cartel_atacar" }, { '5', "cartel_bloquear" }, { '6', "cartel_interactuar" },
+    };
+
+    static void CreateSign(char c, float x, float y, Transform parent)
+    {
+        var go = new GameObject(SignNames[c]);
+        go.transform.SetParent(parent, false);
+        go.transform.position = new Vector3(x, y, 0);
+        var sr = go.AddComponent<SpriteRenderer>(); sr.sprite = S($"Parque/Carteles/{SignNames[c]}.png"); sr.sortingOrder = -3;
+    }
+
+    static TileBase ParkTile(string name)
+    {
+        var t = AssetDatabase.LoadAssetAtPath<TileBase>($"{Tiles}Parque/{name}.asset");
+        if (t == null) throw new System.Exception("Falta el tile del parque " + name);
+        return t;
+    }
+
+    /// <summary>Fondo del jardín: la parte de arriba de la ilustración del parque, con parallax.</summary>
+    static void CreateParkBackground(Vector3 camStart, float levelWidth)
+    {
+        var fondos = new GameObject("Fondos");
+        var layer = Child(fondos, "FondoParque", Vector3.zero);
+        // Verticalmente sigue a la cámara por completo (factor 1): la ilustración siempre cubre la pantalla.
+        Set(layer.AddComponent<Parallax>(), "factor", new Vector2(0.8f, 1f));
+        var sp = S("Parque/Fondos/fondo_parque.png");
+        float w = sp.bounds.size.x, baseY = camStart.y - CamHalfH;
+        for (float x = camStart.x - CamHalfW - 4f; x < camStart.x + 0.2f * levelWidth + 30f; x += w)
+        {
+            var g = Child(layer, "Parque", new Vector3(x + w / 2f, baseY, 0));
+            var sr = g.AddComponent<SpriteRenderer>(); sr.sprite = sp; sr.sortingOrder = -20;
+        }
     }
 
     static void CreateExit(float x, float y, Transform parent)
@@ -482,17 +594,26 @@ public static class LoquitoLevelBuilder
     delegate char CellFn(int x, int y);
     delegate bool SolidFn(int x, int y);
 
-    static void Decorate(int seed, int W, int H, CellFn at, SolidFn solid, List<(char c, int x, int y)> entities)
+    static void Decorate(LevelData data, int W, int H, CellFn at, SolidFn solid, List<(char c, int x, int y)> entities)
     {
-        var rnd = new System.Random(seed * 101);
+        var rnd = new System.Random(data.number * 101 + 7);
         var parent = new GameObject("Decoracion").transform;
-        string[] tall = { "estatua_cruz", "estatua_monje", "estatua_virgen", "vitral_grande", "vitral_roseton", "vitral_alto" };
-        string[] medium = { "banca_1", "banca_2", "banca_3", "pulpito", "altar", "librero", "pila_bautismal", "estandarte_rojo", "estandarte_morado", "estandarte_azul", "cuadro_1", "cuadro_2", "vitral_chico_1", "vitral_chico_2" };
-        string[] small = { "barril", "jarron", "atril", "candelabro_doble" };
+        bool park = data.IsPark;
+        string folder = park ? "Parque/Decoracion" : "Decoracion";
+        string[] tall = park
+            ? new[] { "arbol_1", "arbol_2", "arbol_rosa", "arbol_naranja", "pino_1", "pino_2", "kiosco", "farol_doble", "arco_flores", "farol_1" }
+            : new[] { "estatua_cruz", "estatua_monje", "estatua_virgen", "vitral_grande", "vitral_roseton", "vitral_alto" };
+        string[] medium = park
+            ? new[] { "banca_1", "banca_2", "banca_3", "banca_4", "fuente", "maceta_larga", "maceta_2", "arco_seto", "tablero", "mesa_picnic", "carrito", "reja", "cipres" }
+            : new[] { "banca_1", "banca_2", "banca_3", "pulpito", "altar", "librero", "pila_bautismal", "estandarte_rojo", "estandarte_morado", "estandarte_azul", "cuadro_1", "cuadro_2", "vitral_chico_1", "vitral_chico_2" };
+        string[] small = park
+            ? new[] { "maceta_1", "maceta_3", "bebedero_aves", "bote_basura" }
+            : new[] { "barril", "jarron", "atril", "candelabro_doble" };
         var hanging = new HashSet<string> { "estandarte_rojo", "estandarte_morado", "estandarte_azul", "cuadro_1", "cuadro_2", "vitral_chico_1", "vitral_chico_2" };
 
         int Headroom(int x, int y) { int h = 0; while (y + h < H && at(x, y + h) == ' ') h++; return h; }
-        bool NearEntity(int x, int y) => entities.Any(e => Mathf.Abs(e.x - x) < 4 && Mathf.Abs(e.y - y) < 5);
+        // El cartel grande (1) ocupa más espacio
+        bool NearEntity(int x, int y) => entities.Any(e => Mathf.Abs(e.x - x) < (e.c == '1' ? 8 : 4) && Mathf.Abs(e.y - y) < 5);
 
         int next = 6;
         for (int y = 1; y < H - 1; y++)
@@ -505,9 +626,9 @@ public static class LoquitoLevelBuilder
                 if (!solid(x - 1, y - 1) || !solid(x + 1, y - 1)) continue; // no en bordes
                 int head = Headroom(x, y);
                 if (head < 3) continue;
-                string[] pool = head >= 9 ? tall : head >= 5 ? medium : small;
+                string[] pool = head >= 9 ? (park && rnd.NextDouble() < 0.5 ? medium : tall) : head >= 5 ? medium : small;
                 string name = pool[rnd.Next(pool.Length)];
-                var sprite = S($"Decoracion/{name}.png");
+                var sprite = S($"{folder}/{name}.png");
                 float h = sprite.bounds.size.y;
                 float yOff = hanging.Contains(name) ? Mathf.Min(2.5f, head - h - 0.5f) : (name.StartsWith("vitral") ? 1.2f : 0f);
                 if (h + yOff > head - 0.3f) continue;
@@ -570,10 +691,10 @@ public static class LoquitoLevelBuilder
 
     static void UpdateBuildSettings()
     {
-        var scenes = new List<string> { "Assets/Scenes/Inicio.unity", "Assets/Scenes/Nivel0.unity" };
+        // Las 6 escenas del juego, en orden
+        var scenes = new List<string> { "Assets/Scenes/Inicio.unity", "Assets/Scenes/Jardin.unity" };
         for (int i = 1; i <= Levels.Length; i++) scenes.Add($"Assets/Scenes/Mazmorra{i}.unity");
         scenes.Add("Assets/Scenes/Victoria.unity");
-        scenes.Add("Assets/Scenes/NivelPrueba.unity");
         EditorBuildSettings.scenes = scenes.Where(File.Exists).Select(s => new EditorBuildSettingsScene(s, true)).ToArray();
     }
 
