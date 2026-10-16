@@ -67,8 +67,8 @@ if __name__ == "__main__":
         t.putalpha(255)
         t.save(os.path.join(P, "Tiles", name + ".png")); rep[name] = t.size
 
-    # Fondo: solo la parte de arriba (cielo, ciudad, árboles, kiosco) hasta la banqueta
-    bg = Image.open(os.path.join(ROOT, "fondo_parque.png")).convert("RGBA").crop((0, 0, 2000, 492))
+    # Fondo del parque completo; en Unity la banqueta queda alineada con el piso del nivel
+    bg = Image.open(os.path.join(ROOT, "fondo_parque.png")).convert("RGBA")   # completa: incluye la tierra de abajo
     bg.save(os.path.join(P, "Fondos", "fondo_parque.png")); rep["fondo"] = bg.size
 
     # Nueva cama y fogata (reemplazan a las anteriores)

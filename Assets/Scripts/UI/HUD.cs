@@ -146,7 +146,7 @@ public class HUD : MonoBehaviour
         panel.gameObject.AddComponent<Image>().color = UIFactory.PanelColor;
         var pOutline = panel.gameObject.AddComponent<Outline>(); pOutline.effectColor = UIFactory.Gold; pOutline.effectDistance = new Vector2(2, -2);
         popupTitle = UIFactory.Text(panel, "Titulo", "", 20, TextAnchor.MiddleCenter, UIFactory.Gold, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0, -8), new Vector2(340, 28));
-        popupImage = UIFactory.Image(panel, "Imagen", null, Color.white, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0, -40), new Vector2(110, 100));
+        popupImage = UIFactory.Image(panel, "Imagen", null, Color.white, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0, -42), new Vector2(96, 92));
         popupDescription = UIFactory.Text(panel, "Descripcion", "", 14, TextAnchor.UpperCenter, Color.white, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0, -146), new Vector2(330, 50));
         popupButton = UIFactory.Button(panel, "Recoger", "Recoger", new Vector2(0.5f, 0f), new Vector2(0, 26), new Vector2(130, 30), OnCollectPressed);
         popup.SetActive(false);

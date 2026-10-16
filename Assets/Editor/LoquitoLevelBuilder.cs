@@ -132,7 +132,8 @@ public static class LoquitoLevelBuilder
                 if (imp == null) continue;
                 bool center = p.Contains("/Esbirro/") || p.Contains("chancla_proyectil") || p.Contains("/Parque/Tiles/");
                 int ppu = p.Contains("/Parque/Carteles/") || p.Contains("/Parque/Fondos/") ? 32 : 16;
-                bool changed = imp.textureType != TextureImporterType.Sprite || imp.spritePixelsPerUnit != ppu || imp.filterMode != FilterMode.Point
+                var filter = p.Contains("/Propios/UI/") ? FilterMode.Bilinear : FilterMode.Point;
+                bool changed = imp.textureType != TextureImporterType.Sprite || imp.spritePixelsPerUnit != ppu || imp.filterMode != filter
                                || imp.textureCompression != TextureImporterCompression.Uncompressed;
                 var s = new TextureImporterSettings(); imp.ReadTextureSettings(s);
                 int align = (int)(center ? SpriteAlignment.Center : SpriteAlignment.BottomCenter);
@@ -140,7 +141,7 @@ public static class LoquitoLevelBuilder
                 if (!changed) continue;
                 imp.textureType = TextureImporterType.Sprite; imp.spriteImportMode = SpriteImportMode.Single; imp.spritePixelsPerUnit = ppu;
                 imp.maxTextureSize = 4096;
-                imp.filterMode = FilterMode.Point; imp.textureCompression = TextureImporterCompression.Uncompressed; imp.mipmapEnabled = false;
+                imp.filterMode = filter; imp.textureCompression = TextureImporterCompression.Uncompressed; imp.mipmapEnabled = false;
                 imp.ReadTextureSettings(s); s.spriteAlignment = align; s.spriteMeshType = SpriteMeshType.FullRect; imp.SetTextureSettings(s);
                 imp.SaveAndReimport();
             }
@@ -428,11 +429,9 @@ public static class LoquitoLevelBuilder
             var acol = arena.AddComponent<BoxCollider2D>(); acol.isTrigger = true; acol.size = new Vector2(ax1 - ax0, ay1 - ay0);
             var ba = arena.AddComponent<BossArena>();
             Set(ba, "boss", boss); Set(ba, "gate", gate.transform); Set(ba, "gateOpenHeight", (float)(gy1 - gy0 + 2));
-            float minX = arenaMin.x - 1 + CamHalfW, maxX = arenaMax.x + 2 - CamHalfW;
-            if (minX > maxX) minX = maxX = (arenaMin.x + arenaMax.x + 1) / 2f;
-            float minY = arenaMin.y - 1.5f + CamHalfH, maxY = arenaMax.y + 2 - CamHalfH;
-            if (minY > maxY) minY = maxY = (arenaMin.y + arenaMax.y + 1) / 2f;
-            Set(ba, "cameraMin", new Vector2(minX, minY)); Set(ba, "cameraMax", new Vector2(maxX, maxY));
+            // Área visible durante la pelea: la arena con sus muros, piso y techo
+            Set(ba, "cameraMin", new Vector2(arenaMin.x - 2f, 0f));
+            Set(ba, "cameraMax", new Vector2(arenaMax.x + 3f, arenaMax.y + 3f));
         }
 
         // ---- Jugador y cámara ----
@@ -441,7 +440,7 @@ public static class LoquitoLevelBuilder
             var ph = player.GetComponent<PlayerHealth>();
             Set(ph, "killHeight", -6f);
         }
-        var cam = CreateCamera(player != null ? player.transform : null, new Vector2(CamHalfW, CamHalfH), new Vector2(W - CamHalfW, H - CamHalfH));
+        var cam = CreateCamera(player != null ? player.transform : null, Vector2.zero, new Vector2(W, H));
         if (data.IsPark) cam.backgroundColor = SkyColor;
         Vector3 camStart = cam.transform.position;
 
@@ -449,13 +448,20 @@ public static class LoquitoLevelBuilder
         if (data.IsPark)
         {
             CreateParkBackground(camStart, W);
-            // Vacío oscuro bajo el piso: lo que se ve al asomarse a un hueco
-            var abyss = new GameObject("Vacio");
-            var asr = abyss.AddComponent<SpriteRenderer>();
-            asr.sprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/Cuadrado.png");   // 1x1 unidad, blanco
-            asr.color = new Color32(28, 20, 24, 255); asr.sortingOrder = -15;
-            abyss.transform.position = new Vector3(W / 2f, 2.6f - 20f, 0);
-            abyss.transform.localScale = new Vector3(W + 40, 40, 1);
+            // Vacío oscuro solo dentro de los hoyos del piso (columnas sin bloque en la fila de abajo)
+            var holes = new GameObject("Vacio").transform;
+            var square = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/Cuadrado.png");   // 1x1 unidad, blanco
+            for (int x = 0; x < W; x++)
+            {
+                if (Solid(x, 0)) continue;
+                int x1 = x; while (x1 + 1 < W && !Solid(x1 + 1, 0)) x1++;
+                var hole = new GameObject("Hoyo"); hole.transform.SetParent(holes, false);
+                var hsr = hole.AddComponent<SpriteRenderer>(); hsr.sprite = square;
+                hsr.color = new Color32(28, 20, 24, 255); hsr.sortingOrder = -15;
+                hole.transform.position = new Vector3((x + x1 + 1) / 2f, 2.6f - 10f, 0);
+                hole.transform.localScale = new Vector3(x1 - x + 1, 20f, 1);
+                x = x1;
+            }
         }
         else CreateParallax(camStart, W);
         Decorate(data, W, H, At, Solid, entities);
@@ -519,11 +525,13 @@ public static class LoquitoLevelBuilder
     {
         var fondos = new GameObject("Fondos");
         var layer = Child(fondos, "FondoParque", Vector3.zero);
-        // Verticalmente sigue a la cámara por completo (factor 1): la ilustración siempre cubre la pantalla.
-        Set(layer.AddComponent<Parallax>(), "factor", new Vector2(0.8f, 1f));
+        // Fijo en vertical (factor 0): la banqueta y el pasto del dibujo quedan a la altura del piso del nivel
+        // y la tierra de la ilustración cubre lo que hay debajo. En horizontal se mueve con parallax.
+        Set(layer.AddComponent<Parallax>(), "factor", new Vector2(0.8f, 0f));
         var sp = S("Parque/Fondos/fondo_parque.png");
-        float w = sp.bounds.size.x, baseY = camStart.y - CamHalfH;
-        for (float x = camStart.x - CamHalfW - 4f; x < camStart.x + 0.2f * levelWidth + 30f; x += w)
+        const float grassFromBottom = 162f / 32f;   // el pasto del dibujo está a 162 px del borde inferior (32 PPU)
+        float w = sp.bounds.size.x, baseY = 3f - grassFromBottom;
+        for (float x = camStart.x - 40f; x < camStart.x + 0.2f * levelWidth + 60f; x += w)
         {
             var g = Child(layer, "Parque", new Vector3(x + w / 2f, baseY, 0));
             var sr = g.AddComponent<SpriteRenderer>(); sr.sprite = sp; sr.sortingOrder = -20;
@@ -556,8 +564,9 @@ public static class LoquitoLevelBuilder
         {
             var follow = camGo.AddComponent<CameraFollow>();
             Set(follow, "target", target); Set(follow, "offset", new Vector2(0, 2f)); Set(follow, "useBounds", true);
-            Set(follow, "minPosition", min); Set(follow, "maxPosition", max);
-            p = new Vector3(Mathf.Clamp(target.position.x, min.x, max.x), Mathf.Clamp(target.position.y + 2f, min.y, max.y), -10f);
+            Set(follow, "areaMin", min); Set(follow, "areaMax", max);
+            p = new Vector3(Mathf.Clamp(target.position.x, min.x + CamHalfW, max.x - CamHalfW),
+                            Mathf.Clamp(target.position.y + 2f, min.y + CamHalfH, max.y - CamHalfH), -10f);
         }
         camGo.transform.position = p;
         return cam;
