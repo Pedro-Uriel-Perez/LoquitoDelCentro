@@ -14,6 +14,14 @@ public static class UIFactory
     public static readonly Color PanelColor = new Color(0.08f, 0.06f, 0.12f, 0.92f);
 
     private static Font font;
+    private static Sprite white;
+
+    /// <summary>
+    /// Sprite blanco liso. Las imágenes de tipo "Filled" (barras de vida) necesitan un sprite;
+    /// sin él Unity las dibuja completas y el relleno nunca baja.
+    /// </summary>
+    public static Sprite WhiteSprite => white != null ? white
+        : (white = Sprite.Create(Texture2D.whiteTexture, new Rect(0, 0, 4, 4), new Vector2(0.5f, 0.5f)));
     public static Font DefaultFont => font != null ? font : (font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf"));
 
     public static Canvas CreateCanvas(string name, int sortingOrder)

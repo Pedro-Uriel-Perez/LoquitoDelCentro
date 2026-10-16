@@ -24,7 +24,9 @@ public class BossArena : MonoBehaviour
 
     private void Start()
     {
-        GetComponent<BoxCollider2D>().isTrigger = true;
+        var area = GetComponent<BoxCollider2D>();
+        area.isTrigger = true;
+        if (boss != null) boss.SetWalkBounds(area.bounds.min.x + 1.5f, area.bounds.max.x - 1.5f);
         gateClosedPosition = gate.position;
         gate.position = gateClosedPosition + Vector3.up * gateOpenHeight;
 

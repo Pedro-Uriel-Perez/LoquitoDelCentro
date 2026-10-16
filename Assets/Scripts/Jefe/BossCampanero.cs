@@ -31,6 +31,13 @@ public class BossCampanero : MonoBehaviour
     [SerializeField] private int attacksBeforeTired = 6;
     [SerializeField] private float tiredTime = 2f;
 
+    [Header("Caminar")]
+    [SerializeField] private float walkSpeed = 2f;
+    [Tooltip("Tiempo máximo que camina hacia el jugador antes de atacar.")]
+    [SerializeField] private float maxWalkTime = 1.6f;
+    [Tooltip("Probabilidad de caminar hacia el jugador cuando está lejos (si no, lanza la chancla desde donde está).")]
+    [SerializeField, Range(0f, 1f)] private float walkChance = 0.6f;
+
     [Header("Garrote")]
     [SerializeField] private int damage = 1;
     [SerializeField] private Vector2 clubOffset = new Vector2(2.6f, 1.2f);
@@ -41,7 +48,8 @@ public class BossCampanero : MonoBehaviour
     [SerializeField] private Projectile chanclaPrefab;
     [SerializeField] private Transform throwPoint;
     [SerializeField] private int chanclasPerThrow = 1;
-    [SerializeField] private bool aimAtPlayer;
+    [Tooltip("La chancla va en línea recta hacia donde está el jugador.")]
+    [SerializeField] private bool aimAtPlayer = true;
 
     private Health health;
     private Transform player;
@@ -50,6 +58,7 @@ public class BossCampanero : MonoBehaviour
     private int facing = 1;
     private bool clubHitDone;
     private float idleTime;
+    private float minX = float.NegativeInfinity, maxX = float.PositiveInfinity;
 
     public bool IsDefeated { get; private set; }
     public bool IsFighting => fight != null;
@@ -85,6 +94,13 @@ public class BossCampanero : MonoBehaviour
 
     // ---------- Control desde la arena ----------
 
+    /// <summary>Límites horizontales por los que puede caminar (los define la arena).</summary>
+    public void SetWalkBounds(float min, float max)
+    {
+        minX = min;
+        maxX = max;
+    }
+
     public void BeginFight()
     {
         if (IsDefeated || fight != null) return;
@@ -116,14 +132,34 @@ public class BossCampanero : MonoBehaviour
         while (!IsDefeated)
         {
             FacePlayer();
-            float distance = player != null ? Mathf.Abs(player.position.x - transform.position.x) : 0f;
-            if (distance <= meleeRange) yield return Club();
+            // Lejos: a veces se acerca caminando; si llega, garrote; si no, chancla.
+            if (DistanceToPlayer() > meleeRange && Random.value < walkChance) yield return WalkTowardPlayer();
+            if (DistanceToPlayer() <= meleeRange) yield return Club();
             else yield return Throw();
 
             attacks++;
             if (attacks % attacksBeforeTired == 0) yield return Tired();
             else yield return Idle(pauseBetweenAttacks);
         }
+    }
+
+    private float DistanceToPlayer() => player != null ? Mathf.Abs(player.position.x - transform.position.x) : 0f;
+
+    private IEnumerator WalkTowardPlayer()
+    {
+        // No hay animación de caminar: se usan los cuadros de "quieto" más rápido con un balanceo.
+        for (float t = 0f; t < maxWalkTime && player != null; t += Time.deltaTime)
+        {
+            FacePlayer();
+            if (DistanceToPlayer() <= meleeRange * 0.8f) break;
+            float x = Mathf.Clamp(transform.position.x + facing * walkSpeed * Time.deltaTime, minX, maxX);
+            if (Mathf.Approximately(x, transform.position.x)) break;   // llegó al borde de la arena
+            transform.position = new Vector3(x, transform.position.y, transform.position.z);
+            if (idleFrames.Length > 0) spriteRenderer.sprite = idleFrames[(int)(t * 10f) % idleFrames.Length];
+            spriteRenderer.transform.localPosition = new Vector3(0f, Mathf.Abs(Mathf.Sin(t * 10f)) * 0.08f, 0f);
+            yield return null;
+        }
+        spriteRenderer.transform.localPosition = Vector3.zero;
     }
 
     private IEnumerator Idle(float duration)

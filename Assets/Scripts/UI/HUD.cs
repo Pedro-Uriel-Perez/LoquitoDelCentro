@@ -130,6 +130,8 @@ public class HUD : MonoBehaviour
         bossBar = bar.gameObject;
         var bg = bar.gameObject.AddComponent<Image>(); bg.color = new Color(0, 0, 0, 0.75f);
         bossFill = UIFactory.Image(bar, "Relleno", null, new Color(0.75f, 0.15f, 0.15f), new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(3, 0), new Vector2(294, 8));
+        bossFill.sprite = UIFactory.WhiteSprite;
+        bossFill.preserveAspect = false;
         bossFill.type = Image.Type.Filled;
         bossFill.fillMethod = Image.FillMethod.Horizontal;
         bossFill.rectTransform.anchoredPosition = new Vector2(3, -4);
