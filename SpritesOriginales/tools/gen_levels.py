@@ -102,25 +102,31 @@ def build(sections, name):
     open(os.path.join(OUT, name + ".txt"), "w", encoding="utf8", newline="\n").write(m.text())
     return m.w
 
-def build_nivel0():
-    """El centro: Martha (M) entrega los objetos. Muro falso (B) que se rompe con la botella,
-    escalón alto que pide doble salto y la puerta (X) hacia la Mazmorra 1."""
-    m = Map(80)
+def build_jardin():
+    """El jardín (nivel tutorial). Carteles: 1 mover, 2 saltar, 3 doble salto, 4 atacar, 5 bloquear,
+    6 interactuar. Q = duende inmóvil. Sin techo (al aire libre)."""
+    m = Map(156)
     m.rect(0, 0, m.w - 1, 2); m.rect(0, 0, 1, H - 1); m.rect(m.w - 2, 0, m.w - 1, H - 1)
-    m.rect(0, 22, m.w - 1, H - 1)                       # techo
-    m.put(4, FLOOR, "P"); m.put(9, FLOOR, "C"); m.put(16, FLOOR, "M")
-    m.rect(34, FLOOR, 35, 21, "B")                      # muro falso: se rompe con la botella
-    m.rect(48, FLOOR, 77, 10)                           # zona alta: 8 de alto, pide doble salto
-    m.put(62, 15, "E")                                  # esbirro para practicar el cartón
-    m.put(72, 11, "X")                                  # puerta a la Mazmorra 1
-    rows = m.text().splitlines()[-24:]                  # el centro solo ocupa 24 filas de alto
-    rows[0] = "#" * m.w
-    open(os.path.join(OUT, "Nivel0.txt"), "w", encoding="utf8", newline="\n").write("\n".join(rows) + "\n")
+    m.put(4, FLOOR, "P"); m.put(12, FLOOR, "1")                    # explanada + cartel de mover
+    m.put(21, FLOOR, "2"); m.rect(26, 0, 29, 2, " ")               # cartel de saltar + vacío (si caes, mueres)
+    m.put(33, FLOOR, "C"); m.put(40, FLOOR, "M")                   # checkpoint + Martha
+    m.put(47, FLOOR, "3"); m.rect(52, FLOOR, 66, 10)               # cartel doble salto + plataforma alta (8)
+    m.put(56, 11, "4"); m.put(62, 11, "Q")                         # cartel atacar + duende inmóvil
+    m.rect(67, 0, 98, 2, " ")                                      # tramo de saltos sobre el vacío
+    m.rect(70, 7, 73, 8); m.rect(77, 9, 80, 10); m.rect(84, 6, 87, 7); m.rect(91, 10, 94, 11)
+    m.put(99, FLOOR, "C"); m.put(105, FLOOR, "5")                  # checkpoint + cartel bloquear
+    m.rect(108, FLOOR, 121, 6); m.put(115, 11, "E")                # plataforma con esbirro (vuela sobre ella)
+    m.rect(123, 7, 125, 8)                                         # escalón hacia la torre
+    t = 128
+    m.rect(t, FLOOR, t + 9, 10); m.rect(t, FLOOR, t + 1, 7, "B")   # coleccionable escondido tras un muro falso
+    m.rect(t + 2, FLOOR, t + 7, 7, " "); m.put(t + 5, FLOOR, "K")
+    m.put(143, FLOOR, "6"); m.put(149, FLOOR, "N")                 # cartel interactuar + torre de radio
+    rows = m.text().splitlines()[-24:]                             # 24 filas de alto, sin techo
+    open(os.path.join(OUT, "Jardin.txt"), "w", encoding="utf8", newline="\n").write("\n".join(rows) + "\n")
     return m.w
 
 if __name__ == "__main__":
-    print(build_nivel0())
+    print(build_jardin())
     print(build([(start, {}), (platforms, dict(panalito=False)), (pits, dict(count=1)), (climb, dict(panalito=True)), (secret_tower, {}), (boss_arena, {})], "Mazmorra1"))
     print(build([(start, {}), (secret_tower, {}), (pits, dict(count=3)), (platforms, dict(panalito=True, variant=1)), (climb, dict(panalito=False)), (boss_arena, {})], "Mazmorra2"))
     print(build([(start, {}), (climb, dict(panalito=True)), (platforms, dict(variant=1)), (pits, dict(count=2)), (secret_tower, {}), (platforms, dict(panalito=True)), (boss_arena, {})], "Mazmorra3"))
-    print(build([(start, {}), (platforms, dict(variant=0)), (climb, dict(panalito=False)), (pits, dict(count=2)), (climb, dict(panalito=True)), (platforms, dict(variant=1)), (secret_tower, {}), (boss_arena, dict(w=44))], "Mazmorra4"))
