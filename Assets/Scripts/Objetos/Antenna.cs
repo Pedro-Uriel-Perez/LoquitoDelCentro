@@ -32,7 +32,7 @@ public class Antenna : MonoBehaviour
 
     private void Update()
     {
-        if (destroyed || player == null) return;
+        if (destroyed || player == null || SettingsMenu.IsOpen) return;
 
         bool near = Mathf.Abs(player.position.x - transform.position.x) < interactRange &&
                     Mathf.Abs(player.position.y - transform.position.y) < 3f;
@@ -51,6 +51,7 @@ public class Antenna : MonoBehaviour
     private IEnumerator DestroyAntenna()
     {
         destroyed = true;
+        AudioManager.Instance.PlaySfx("Victoria");
         if (HUD.Instance != null)
         {
             HUD.Instance.SetPrompt(this, null);

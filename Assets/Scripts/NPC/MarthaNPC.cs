@@ -54,7 +54,7 @@ public class MarthaNPC : MonoBehaviour
 
     private void Update()
     {
-        if (player == null || input == null) return;
+        if (player == null || input == null || SettingsMenu.IsOpen) return;
         var hud = HUD.Instance;
 
         if (!talking)

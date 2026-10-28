@@ -24,7 +24,7 @@ public class LevelExit : MonoBehaviour
 
     private void Update()
     {
-        if (used || player == null) return;
+        if (used || player == null || SettingsMenu.IsOpen) return;
         bool near = Mathf.Abs(player.position.x - transform.position.x) < range &&
                     Mathf.Abs(player.position.y - transform.position.y) < 2.5f;
         if (HUD.Instance != null) HUD.Instance.SetPrompt(this, near ? prompt : null);

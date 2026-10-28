@@ -61,6 +61,7 @@ public static class LoquitoLevelBuilder
     {
         if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
         ConfigureSprites();
+        ConfigureAudio();
         ConfigureTiles();
         UpdateLoquito();
         BuildPrefabs();
@@ -120,19 +121,40 @@ public static class LoquitoLevelBuilder
     // Sprites y prefabs
     // ======================================================================
 
+    /// <summary>Música en streaming (no se carga completa en memoria); efectos descomprimidos para que suenen al instante.</summary>
+    static void ConfigureAudio()
+    {
+        foreach (var g in AssetDatabase.FindAssets("t:AudioClip", new[] { "Assets/Resources/Audio" }))
+        {
+            string p = AssetDatabase.GUIDToAssetPath(g);
+            var imp = AssetImporter.GetAtPath(p) as AudioImporter;
+            if (imp == null) continue;
+            bool isMusic = p.Contains("/Musica/");
+            var s = imp.defaultSampleSettings;
+            var load = isMusic ? AudioClipLoadType.Streaming : AudioClipLoadType.DecompressOnLoad;
+            if (s.loadType == load) continue;
+            s.loadType = load;
+            s.compressionFormat = AudioCompressionFormat.Vorbis;
+            s.quality = isMusic ? 0.7f : 0.9f;
+            imp.defaultSampleSettings = s;
+            imp.SaveAndReimport();
+        }
+    }
+
     static void ConfigureSprites()
     {
         AssetDatabase.StartAssetEditing();
         try
         {
-            foreach (var g in AssetDatabase.FindAssets("t:Texture2D", new[] { "Assets/Sprites/Propios" }))
+            foreach (var g in AssetDatabase.FindAssets("t:Texture2D", new[] { "Assets/Sprites/Propios", "Assets/Resources/Menu" }))
             {
                 string p = AssetDatabase.GUIDToAssetPath(g);
                 var imp = AssetImporter.GetAtPath(p) as TextureImporter;
                 if (imp == null) continue;
-                bool center = p.Contains("/Esbirro/") || p.Contains("chancla_proyectil") || p.Contains("/Parque/Tiles/");
+                bool ui = p.Contains("/Propios/UI/") || p.Contains("/Resources/Menu/");
+                bool center = ui || p.Contains("/Esbirro/") || p.Contains("chancla_proyectil") || p.Contains("/Parque/Tiles/");
                 int ppu = p.Contains("/Parque/Carteles/") || p.Contains("/Parque/Fondos/") ? 32 : 16;
-                var filter = p.Contains("/Propios/UI/") ? FilterMode.Bilinear : FilterMode.Point;
+                var filter = ui ? FilterMode.Bilinear : FilterMode.Point;   // la interfaz se agranda: filtro suave
                 bool changed = imp.textureType != TextureImporterType.Sprite || imp.spritePixelsPerUnit != ppu || imp.filterMode != filter
                                || imp.textureCompression != TextureImporterCompression.Uncompressed;
                 var s = new TextureImporterSettings(); imp.ReadTextureSettings(s);
@@ -665,24 +687,10 @@ public static class LoquitoLevelBuilder
 
     static void BuildTitleScene()
     {
+        // La pantalla de inicio es solo interfaz: la ilustración del menú cubre toda la pantalla
         var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
-        // Pequeño decorado del templo detrás del menú
-        var grid = new GameObject("Grid"); grid.AddComponent<Grid>();
-        var tm = Child(grid, "Suelo", Vector3.zero); var map = tm.AddComponent<Tilemap>(); tm.AddComponent<TilemapRenderer>();
-        for (int x = -14; x <= 14; x++)
-            for (int y = -3; y <= 0; y++)
-                map.SetTile(new Vector3Int(x, y, 0), y == 0 ? T(1 + ((x + 20) % 2), 7) : y == -1 ? T(1 + ((x + 20) % 2), 8) : T(1, 5));
-        var cam = CreateCamera(null, Vector2.zero, Vector2.zero);
-        cam.transform.position = new Vector3(0, 5.75f, -10);
-        CreateParallax(cam.transform.position, 30);
-        var deco = new GameObject("Decoracion").transform;
-        void D(string n, float x, float y) { var g = new GameObject(n); g.transform.SetParent(deco, false); g.transform.position = new Vector3(x, y, 0); var sr = g.AddComponent<SpriteRenderer>(); sr.sprite = S($"Decoracion/{n}.png"); sr.sortingOrder = -4; }
-        D("vitral_grande", -1f, 2.2f); D("vitral_alto", 9f, 2.2f); D("estatua_cruz", 4.5f, 1f); D("estatua_virgen", -8.5f, 1f);
-        D("estandarte_rojo", 6.8f, 5f); D("candil", 1.5f, 8.3f); D("banca_1", 10.5f, 1f);
-        var cp = (GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(Prefabs + "Checkpoint.prefab"), scene);
-        cp.transform.position = new Vector3(-3.5f, 1f, 0);
-        var menu = new GameObject("Menu").AddComponent<TitleMenu>();
-        Set(menu, "portrait", S("UI/retrato.png"));
+        CreateCamera(null, Vector2.zero, Vector2.zero);
+        new GameObject("Menu").AddComponent<TitleMenu>();
         EditorSceneManager.SaveScene(scene, "Assets/Scenes/Inicio.unity");
     }
 
