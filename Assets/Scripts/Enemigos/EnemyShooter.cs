@@ -70,5 +70,6 @@ public class EnemyShooter : MonoBehaviour
 
         var projectile = Instantiate(projectilePrefab, origin, Quaternion.identity);
         projectile.Launch(direction);
+        AudioManager.Instance.PlaySfxAt("Lanzamiento_Esbirros", origin);
     }
 }

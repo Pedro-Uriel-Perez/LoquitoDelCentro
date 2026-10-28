@@ -75,7 +75,11 @@ public class PlayerHealth : MonoBehaviour
         if (animator != null) animator.Play(hurtState, 0, 0f);
 
         if (Hearts <= 0) StartCoroutine(DieAndRespawn());
-        else StartCoroutine(Invulnerability(invulnerableTime));
+        else
+        {
+            AudioManager.Instance.PlaySfx("Vida_Perdida");
+            StartCoroutine(Invulnerability(invulnerableTime));
+        }
         return true;
     }
 
@@ -95,6 +99,7 @@ public class PlayerHealth : MonoBehaviour
         IsDead = true;
         controller.InputEnabled = false;
         if (combat != null) combat.CancelAttack();
+        AudioManager.Instance.PlaySfx("Derrota");   // perdió todas las vidas: regresa al checkpoint
         OnDeath?.Invoke();
 
         yield return new WaitForSeconds(respawnDelay);

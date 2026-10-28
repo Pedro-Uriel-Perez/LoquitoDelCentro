@@ -34,6 +34,7 @@ public class PanalitoPickup : MonoBehaviour
 
         taken = true;
         player.Heal(heal);
+        AudioManager.Instance.PlaySfx("Panalito_Agarrado");
         StartCoroutine(PickUp());
     }
 

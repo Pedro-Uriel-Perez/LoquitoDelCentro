@@ -62,6 +62,9 @@ public class BossArena : MonoBehaviour
             cameraFollow.SetBounds(cameraMin, cameraMax);
         }
         if (HUD.Instance != null) HUD.Instance.ShowMessage("¡No hay escapatoria!", 1.5f);
+        // La presentación y la música del jefe empiezan al mismo tiempo
+        AudioManager.Instance.PlaySfx("Presentacion_Jefe1");
+        AudioManager.Instance.PlayBossMusic();
         boss.BeginFight();
     }
 
@@ -73,6 +76,8 @@ public class BossArena : MonoBehaviour
         StartCoroutine(MoveGate(gateClosedPosition + Vector3.up * gateOpenHeight));
         if (cameraFollow != null) cameraFollow.SetBounds(savedMin, savedMax);
         boss.ResetFight();
+        // Reaparece en el checkpoint antes de la arena: vuelve la música de la mazmorra
+        AudioManager.Instance.PlaySceneMusic(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
     }
 
     private IEnumerator MoveGate(Vector3 target)

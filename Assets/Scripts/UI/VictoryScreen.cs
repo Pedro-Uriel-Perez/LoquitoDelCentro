@@ -27,8 +27,17 @@ public class VictoryScreen : MonoBehaviour
         var root = canvas.transform;
         UIFactory.Stretch(root, "Fondo").gameObject.AddComponent<Image>().color = new Color(0.09f, 0.08f, 0.14f);
 
-        if (gm.AllCollectibles) BuildSecretEnding(root);
-        else BuildBasicVictory(root, gm.CollectibleCount);
+        if (gm.AllCollectibles)
+        {
+            BuildSecretEnding(root);
+            AudioManager.Instance.UnlockSecretEnding();   // desde ahora el menú permite elegir esta canción
+            AudioManager.Instance.PlayMusic(AudioManager.MusicaFinalSecreto);
+        }
+        else
+        {
+            BuildBasicVictory(root, gm.CollectibleCount);
+            AudioManager.Instance.PlayMusic(AudioManager.MusicaInicioFin);
+        }
 
         var back = UIFactory.Button(root, "Volver", "Volver al inicio", new Vector2(0.5f, 0f), new Vector2(0, 30), new Vector2(180, 32),
                                     () => GameManager.Instance.GoToTitle());

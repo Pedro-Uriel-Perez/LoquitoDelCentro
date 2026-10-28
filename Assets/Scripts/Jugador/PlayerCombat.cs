@@ -105,6 +105,7 @@ public class PlayerCombat : MonoBehaviour
 
         controller.MovementLocked = !inAir;
         if (animator != null) animator.Play(state, 0, 0f);
+        AudioManager.Instance.PlaySfx("Golpe");   // suena aunque no le pegue a nada
 
         yield return new WaitForSeconds(hitboxDelay);
         if (hitbox != null)
@@ -154,6 +155,7 @@ public class PlayerCombat : MonoBehaviour
         if (sourceSide != controller.FacingDirection) return false;
 
         Durability--;
+        AudioManager.Instance.PlaySfx("Escudo");
         controller.ApplyKnockback(new Vector2(-sourceSide * blockPushback.x, blockPushback.y), 0.1f);
 
         if (Durability <= 0)

@@ -35,6 +35,7 @@ public class HUD : MonoBehaviour
     private object promptOwner;
     private Coroutine messageRoutine;
     private bool reenableAfterPopup = true;
+    private bool voiceToggle;
     private string popupCollectedMessage;
     private RectTransform canvasRect;
     private RectTransform dialogue;
@@ -266,6 +267,9 @@ public class HUD : MonoBehaviour
         messageText.text = "";
         dialogueAnchor = anchor;
         dialogueText.text = text;
+        // Cualquier personaje que hable: balbuceo alternando entre los dos sonidos
+        AudioManager.Instance.PlayVoice(voiceToggle ? "Balbuseo2" : "Balbuseo1");
+        voiceToggle = !voiceToggle;
         dialogue.gameObject.SetActive(true);
         PositionDialogue();
     }

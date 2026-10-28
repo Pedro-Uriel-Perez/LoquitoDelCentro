@@ -242,6 +242,7 @@ public class BossCampanero : MonoBehaviour
         if (aimAtPlayer && player != null) dir = (Vector2)(player.position + Vector3.up * 1.3f - origin);
         var chancla = Instantiate(chanclaPrefab, origin, Quaternion.identity);
         chancla.Launch(dir);
+        AudioManager.Instance.PlaySfx("Chancla_jefe");
     }
 
     private IEnumerator Tired()
@@ -266,6 +267,7 @@ public class BossCampanero : MonoBehaviour
     private void OnDefeated()
     {
         IsDefeated = true;
+        AudioManager.Instance.StopAll();     // al derrotarlo todo queda en silencio
         if (fight != null) StopCoroutine(fight);
         fight = null;
         ResetPose();

@@ -40,6 +40,7 @@ public class RandomJumper : MonoBehaviour
         if (IsGrounded && Time.time >= nextJumpTime)
         {
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
+            AudioManager.Instance.PlaySfxAt("Duende", transform.position);
             ScheduleNextJump();
         }
     }

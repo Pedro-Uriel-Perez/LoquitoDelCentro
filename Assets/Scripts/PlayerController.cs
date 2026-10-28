@@ -108,11 +108,13 @@ public class PlayerController : MonoBehaviour
                 {
                     velocity.y = jumpForce;
                     isGrounded = false;
+                    AudioManager.Instance.PlaySfx("Salto");
                 }
                 else if (canDoubleJump && GameManager.Instance.TieneCalcetas)
                 {
                     velocity.y = doubleJumpForce;
                     canDoubleJump = false;
+                    AudioManager.Instance.PlaySfx("Salto");
                 }
             }
             jumpPressed = false;

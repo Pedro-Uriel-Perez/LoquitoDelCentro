@@ -63,6 +63,7 @@ public class AngelStatue : MonoBehaviour
         if (animator != null) animator.Play(attackState, 0, 0f);
 
         yield return new WaitForSeconds(windup);
+        AudioManager.Instance.PlaySfxAt("Golpe", transform.position);   // suena aunque no alcance al jugador
 
         float end = Time.time + activeTime;
         bool hit = false;

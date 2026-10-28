@@ -35,6 +35,7 @@ public class Collectible : MonoBehaviour
     {
         if (other.GetComponentInParent<PlayerHealth>() == null) return;
         gameObject.SetActive(false);
+        AudioManager.Instance.PlaySfx("Coleccionable_Agarrado");
 
         if (HUD.Instance != null) HUD.Instance.ShowCollectible(bigSprite, displayName, description, () => GameManager.Instance.AddCollectible(id));
         else GameManager.Instance.AddCollectible(id);
