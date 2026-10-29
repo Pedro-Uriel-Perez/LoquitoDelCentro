@@ -26,8 +26,16 @@ public class TitleMenu : MonoBehaviour
         fitter.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent;
         fitter.aspectRatio = bg.sprite != null ? bg.sprite.rect.width / bg.sprite.rect.height : 4f / 3f;
 
-        UIFactory.Text(root, "Titulo", "LOQUITO\nDEL CENTRO", 44, TextAnchor.MiddleCenter, UIFactory.Gold,
-                       new Vector2(0.24f, 1f), new Vector2(0.5f, 1f), new Vector2(0, -18), new Vector2(300, 120));
+        // Logo: ocupa el espacio entre el borde de arriba y el botón Jugar, sin deformarse
+        var logo = UIFactory.Image(root, "Logo", Resources.Load<Sprite>("Menu/menu_logo"), Color.white,
+                                   new Vector2(0.24f, 1f), new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero);
+        logo.preserveAspect = true;
+        logo.raycastTarget = false;
+        var logoRect = logo.rectTransform;
+        logoRect.anchorMin = new Vector2(0.24f, 0.5f);
+        logoRect.anchorMax = new Vector2(0.24f, 1f);
+        logoRect.offsetMin = new Vector2(-135, 40);
+        logoRect.offsetMax = new Vector2(135, -6);
 
         var anchor = new Vector2(0.24f, 0.5f);
         var jugar = MenuButton(root, "Jugar", "jugar", anchor, new Vector2(0, 0), () => GameManager.Instance.NewGame());

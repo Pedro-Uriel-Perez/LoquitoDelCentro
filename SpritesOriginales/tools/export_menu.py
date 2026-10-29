@@ -1,5 +1,5 @@
 """Exporta el fondo del menú, los botones (normal / seleccionado) y los objetos nuevos en alta calidad.
-Fuentes en SpritesOriginales/: menu_fondo.jpg, botones_menu.png, objetos_v3.png (copiadas de Recursos_Loquito)."""
+Fuentes en SpritesOriginales/: menu_fondo.jpg, logo.png, botones_menu.png, objetos_v3.png (copiadas de Recursos_Loquito)."""
 import os, sys
 import numpy as np
 from PIL import Image
@@ -49,6 +49,10 @@ if __name__ == "__main__":
     # Fondo del menú
     bg = Image.open(os.path.join(ROOT, "menu_fondo.jpg")).convert("RGB")
     bg.save(os.path.join(MENU, "menu_fondo.png")); print("fondo", bg.size)
+
+    logo = Image.open(os.path.join(ROOT, "logo.png")).convert("RGBA")
+    logo = fit(logo.crop(logo.getchannel("A").point(lambda a: 255 if a > 8 else 0).getbbox()), 900)
+    logo.save(os.path.join(MENU, "menu_logo.png")); print("logo", logo.size)
 
     sheet = Image.open(os.path.join(ROOT, "botones_menu.png")).convert("RGBA")
     for cols, rows in ((TEXT_COLS, TEXT_ROWS), (ICON_COLS, ICON_ROWS)):

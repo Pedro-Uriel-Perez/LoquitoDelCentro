@@ -128,8 +128,8 @@ public class SettingsMenu : MonoBehaviour
 
     private const string CreditsText =
         "LOQUITO DEL CENTRO\n\n" +
-        "Pedro Uriel Pérez Monzón\nArte, animación, sonido y documentación\n\n" +
-        "Miguel Ángel Álvarez Ibarra\nProgramación y diseño de niveles\n\n" +
+        "Pedro Uriel Pérez Monzón\n" +
+        "Miguel Ángel Álvarez Ibarra\n\n" +
         "Universidad Tecnológica del Norte de Guanajuato\n" +
         "Ingeniería en Desarrollo y Gestión de Software\n" +
         "Creación de Videojuegos · Profesor: Gabriel Barrón Rodríguez\n\n" +
