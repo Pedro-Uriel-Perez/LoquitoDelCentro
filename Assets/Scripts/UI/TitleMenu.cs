@@ -3,7 +3,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 /// <summary>
-/// Pantalla de inicio: ilustración de fondo, título y botones Jugar / Créditos / Salir.
+/// Pantalla de inicio: ilustración de fondo, logo y botones Jugar / Créditos / Salir (Salir no aparece en la web).
 /// Después de ver el final secreto aparece una opción para elegir la canción del menú.
 /// La configuración (engrane de la esquina) la pone SettingsMenu.
 /// </summary>
@@ -40,7 +40,7 @@ public class TitleMenu : MonoBehaviour
         var anchor = new Vector2(0.24f, 0.5f);
         var jugar = MenuButton(root, "Jugar", "jugar", anchor, new Vector2(0, 0), () => GameManager.Instance.NewGame());
         MenuButton(root, "Creditos", "creditos", anchor, new Vector2(0, -58), () => SettingsMenu.Instance.ShowCredits());
-        MenuButton(root, "Salir", "salir", anchor, new Vector2(0, -116), Quit);
+        if (SettingsMenu.CanQuit) MenuButton(root, "Salir", "salir", anchor, new Vector2(0, -116), Quit);   // en la web no se puede cerrar
 
         if (AudioManager.Instance.SecretUnlocked)
         {
@@ -53,7 +53,7 @@ public class TitleMenu : MonoBehaviour
             RefreshSong();
         }
 
-        UIFactory.Text(root, "Controles", "Mover: A/D · Saltar: Espacio · Botella: J · Cartón: K · Interactuar: E · Configuración: Esc",
+        UIFactory.Text(root, "Controles", "Mover: A/D · Saltar: Espacio · Botella: J · Cartón: K · Interactuar: E · Configuración: Esc / Tab",
                        11, TextAnchor.MiddleCenter, new Color(0.85f, 0.85f, 0.95f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0, 6), new Vector2(620, 20));
 
         UIFactory.EnsureEventSystem();

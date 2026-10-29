@@ -9,7 +9,8 @@ using UnityEngine.UI;
 /// Botón de configuración (esquina superior derecha) y su menú, presentes en todas las escenas.
 /// Silencio, volumen de música y de efectos, Jugar, Créditos y Salir.
 /// Dentro de un nivel el juego se pausa: Jugar reanuda y Salir regresa al menú de inicio.
-/// En el menú de inicio: Jugar empieza la partida y Salir cierra el juego.
+/// En el menú de inicio: Jugar empieza la partida y Salir cierra el juego (en la versión web no hay Salir).
+/// Se abre con el engrane, Esc, Tab o Start del control.
 /// Se abre y cierra también con Esc o con Start del control.
 /// </summary>
 public class SettingsMenu : MonoBehaviour
@@ -33,7 +34,7 @@ public class SettingsMenu : MonoBehaviour
     }
 
     private GameObject panel, credits;
-    private Button playButton, creditsBack;
+    private Button playButton, creditsButton, exitButton, creditsBack;
     private Image muteIcon, muteLine;
     private Image[] musicBar, sfxBar;
     private bool paused;
@@ -46,6 +47,8 @@ public class SettingsMenu : MonoBehaviour
     private static readonly Color Stone = new Color(0.35f, 0.42f, 0.58f);
 
     private static bool InTitle => SceneManager.GetActiveScene().name == GameManager.TitleScene;
+    /// <summary>En el navegador no se puede cerrar el juego.</summary>
+    public static bool CanQuit => Application.platform != RuntimePlatform.WebGLPlayer;
     private static bool InLevel
     {
         get { string n = SceneManager.GetActiveScene().name; return n == "Jardin" || n.StartsWith("Mazmorra"); }
@@ -69,7 +72,9 @@ public class SettingsMenu : MonoBehaviour
 
     private void Update()
     {
-        bool toggle = (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame) ||
+        // Tab además de Esc: en el navegador Esc también sale de pantalla completa
+        var kb = Keyboard.current;
+        bool toggle = (kb != null && (kb.escapeKey.wasPressedThisFrame || kb.tabKey.wasPressedThisFrame)) ||
                       (Gamepad.current != null && Gamepad.current.startButton.wasPressedThisFrame);
         if (!toggle) return;
         if (credits.activeSelf) CloseCredits();
@@ -107,8 +112,8 @@ public class SettingsMenu : MonoBehaviour
 
         var bottom = new Vector2(0.5f, 0f);
         playButton = ImageButton(box, "Jugar", "jugar", bottom, new Vector2(0.5f, 0f), new Vector2(-112, 14), new Vector2(104, 44), OnPlay);
-        ImageButton(box, "Creditos", "creditos", bottom, new Vector2(0.5f, 0f), new Vector2(0, 14), new Vector2(104, 44), ShowCredits);
-        ImageButton(box, "Salir", "salir", bottom, new Vector2(0.5f, 0f), new Vector2(112, 14), new Vector2(104, 44), OnExit);
+        creditsButton = ImageButton(box, "Creditos", "creditos", bottom, new Vector2(0.5f, 0f), new Vector2(0, 14), new Vector2(104, 44), ShowCredits);
+        exitButton = ImageButton(box, "Salir", "salir", bottom, new Vector2(0.5f, 0f), new Vector2(112, 14), new Vector2(104, 44), OnExit);
         panel.SetActive(false);
 
         // Créditos
@@ -202,6 +207,7 @@ public class SettingsMenu : MonoBehaviour
     {
         if (panel.activeSelf) return;
         Refresh();
+        LayoutButtons();
         panel.SetActive(true);
         if (InLevel && !paused)
         {
@@ -232,6 +238,16 @@ public class SettingsMenu : MonoBehaviour
         yield return null;
         yield return null;
         if (c != null) c.InputEnabled = value;
+    }
+
+    /// <summary>En el menú de inicio de la versión web no hay Salir: Jugar y Créditos quedan centrados.</summary>
+    private void LayoutButtons()
+    {
+        bool showExit = CanQuit || !InTitle;
+        exitButton.gameObject.SetActive(showExit);
+        float half = showExit ? 112f : 56f;
+        ((RectTransform)playButton.transform).anchoredPosition = new Vector2(-half, 14);
+        ((RectTransform)creditsButton.transform).anchoredPosition = new Vector2(showExit ? 0f : half, 14);
     }
 
     private void OnPlay()

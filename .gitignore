@@ -114,3 +114,7 @@ __pycache__/
 
 # Registro de actualización de Visual Studio
 UpgradeLog*.htm
+
+# Restos que deja el build de WebGL
+/[Aa]ssets/packages-merged-link*
+/[Aa]ssets/[Rr]esources/PerformanceTestRun*
