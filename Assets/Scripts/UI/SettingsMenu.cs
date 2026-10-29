@@ -128,6 +128,7 @@ public class SettingsMenu : MonoBehaviour
 
     private const string CreditsText =
         "LOQUITO DEL CENTRO\n\n" +
+        "Alumnos: \n" +
         "Pedro Uriel Pérez Monzón\n" +
         "Miguel Ángel Álvarez Ibarra\n\n" +
         "Universidad Tecnológica del Norte de Guanajuato\n" +
