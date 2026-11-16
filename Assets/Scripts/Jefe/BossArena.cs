@@ -9,6 +9,9 @@ using UnityEngine;
 public class BossArena : MonoBehaviour
 {
     [SerializeField] private BossCampanero boss;
+    [SerializeField] private BossDragon dragonBoss;
+    [SerializeField] private BossSenora senoraBoss;
+    [SerializeField] private string introSfx = "Presentacion_Jefe1";
     [SerializeField] private Transform gate;
     [Tooltip("Cuánto sube la compuerta cuando está abierta (queda escondida en el muro).")]
     [SerializeField] private float gateOpenHeight = 5f;
@@ -22,11 +25,18 @@ public class BossArena : MonoBehaviour
     private CameraFollow cameraFollow;
     private Vector2 savedMin, savedMax;
 
+    private bool HasBoss => boss != null || dragonBoss != null || senoraBoss != null;
+    private bool IsBossDefeated => (boss != null && boss.IsDefeated) ||
+                                   (dragonBoss != null && dragonBoss.IsDefeated) ||
+                                   (senoraBoss != null && senoraBoss.IsDefeated);
+
     private void Start()
     {
         var area = GetComponent<BoxCollider2D>();
         area.isTrigger = true;
         if (boss != null) boss.SetWalkBounds(area.bounds.min.x + 1.5f, area.bounds.max.x - 1.5f);
+        if (dragonBoss != null) dragonBoss.SetWalkBounds(area.bounds.min.x + 1.5f, area.bounds.max.x - 1.5f);
+        if (senoraBoss != null) senoraBoss.SetWalkBounds(area.bounds.min.x + 1.5f, area.bounds.max.x - 1.5f);
         gateClosedPosition = gate.position;
         gate.position = gateClosedPosition + Vector3.up * gateOpenHeight;
 
@@ -46,7 +56,7 @@ public class BossArena : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        if (closed || boss == null || boss.IsDefeated) return;
+        if (closed || !HasBoss || IsBossDefeated) return;
         if (other.GetComponentInParent<PlayerHealth>() == null) return;
         Close();
     }
@@ -63,19 +73,26 @@ public class BossArena : MonoBehaviour
         }
         if (HUD.Instance != null) HUD.Instance.ShowMessage("¡No hay escapatoria!", 1.5f);
         // La presentación y la música del jefe empiezan al mismo tiempo
-        AudioManager.Instance.PlaySfx("Presentacion_Jefe1");
+        string sfxToPlay = senoraBoss != null ? "Presentacion_LaSeñora"
+                         : dragonBoss != null ? "Presentacion-dragon"
+                         : introSfx;
+        AudioManager.Instance.PlaySfx(sfxToPlay);
         AudioManager.Instance.PlayBossMusic();
-        boss.BeginFight();
+        if (boss != null) boss.BeginFight();
+        if (dragonBoss != null) dragonBoss.BeginFight();
+        if (senoraBoss != null) senoraBoss.BeginFight();
     }
 
     private void OnPlayerRespawn()
     {
-        if (!closed || boss.IsDefeated) return;
+        if (!closed || IsBossDefeated) return;
         closed = false;
         StopAllCoroutines();
         StartCoroutine(MoveGate(gateClosedPosition + Vector3.up * gateOpenHeight));
         if (cameraFollow != null) cameraFollow.SetBounds(savedMin, savedMax);
-        boss.ResetFight();
+        if (boss != null) boss.ResetFight();
+        if (dragonBoss != null) dragonBoss.ResetFight();
+        if (senoraBoss != null) senoraBoss.ResetFight();
         // Reaparece en el checkpoint antes de la arena: vuelve la música de la mazmorra
         AudioManager.Instance.PlaySceneMusic(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
     }

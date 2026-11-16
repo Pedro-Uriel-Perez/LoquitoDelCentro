@@ -373,12 +373,13 @@ MonoBehaviour:
   hitboxDelay: 0.08
   hitboxDuration: 0.2
   comboWindow: 0.35
+  attackCooldown: 0.2
   hitKnockback: {x: 2, y: 1}
   finisherKnockback: {x: 10, y: 5}
-  groundHitboxOffset: {x: 1.3, y: 1.4}
-  groundHitboxSize: {x: 1.6, y: 1.2}
-  airHitboxOffset: {x: 1.1, y: 2}
-  airHitboxSize: {x: 2.4, y: 2.8}
+  groundHitboxOffset: {x: 1.55, y: 1.4}
+  groundHitboxSize: {x: 2.2, y: 1.65}
+  airHitboxOffset: {x: 1.3, y: 2}
+  airHitboxSize: {x: 3.2, y: 3.6}
   cartonVisual: {fileID: 0}
   maxDurability: 3
   recoveryTime: 8
