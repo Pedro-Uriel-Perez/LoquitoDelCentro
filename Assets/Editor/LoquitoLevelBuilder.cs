@@ -21,6 +21,7 @@ using UnityEngine.Tilemaps;
 ///   [ ]  esquinas inferior-izquierda y superior-derecha del interior de la arena
 ///   M  Martha la Loca (jardín)    X  puerta de salida del nivel
 ///   Q  duende inmóvil (jardín)
+///   T  plataforma atravesable desde abajo (solo mazmorra 2)   V  panalito que reaparece al ser noqueado
 ///   1..6  carteles del jardín: 1 mover, 2 saltar, 3 doble salto, 4 atacar, 5 bloquear, 6 interactuar
 /// </summary>
 public static class LoquitoLevelBuilder
@@ -46,10 +47,10 @@ public static class LoquitoLevelBuilder
     {
         new LevelData { number = 1, collectibleId = 2, name = "Templo del Reloj", bossName = "El Campanero del Reloj", itemKey = "lata_frijoles",
             itemName = "Lata de frijoles", itemDesc = "Mejor esto a un suaperro.", telegraph = 0.5f, pause = 1.0f, chanclas = 1 },
-        new LevelData { number = 2, collectibleId = 3, name = "Templo del Pozo", bossName = "El Campanero del Pozo", itemKey = "lata_coca",
-            itemName = "Lata de coca", itemDesc = "Ya junté 3 kilos de lata, puedo comprarme una de verdad.", telegraph = 0.45f, pause = 0.85f, chanclas = 2 },
-        new LevelData { number = 3, collectibleId = 4, name = "Templo de la Campana Rota", bossName = "El Campanero de la Campana Rota", itemKey = "caja_madera",
-            itemName = "Cajita de madera", itemDesc = "¡¡¡Mi trono!!!", telegraph = 0.4f, pause = 0.75f, chanclas = 2 },
+        new LevelData { number = 2, collectibleId = 3, name = "Templo del Pozo", bossName = "El Dragón Borracho", itemKey = "lata_coca",
+            itemName = "Lata de coca", itemDesc = "Ya junté 3 kilos de lata, puedo comprarme una de verdad.", telegraph = 0.35f, pause = 2f, chanclas = 2 },
+        new LevelData { number = 3, collectibleId = 4, name = "Templo de la Campana Rota", bossName = "La Señora", itemKey = "caja_madera",
+            itemName = "Cajita de madera", itemDesc = "¡¡¡Mi trono!!!", telegraph = 0.25f, pause = 1f, chanclas = 2 },
     };
 
     static readonly Color SkyColor = new Color32(35, 137, 225, 255);
@@ -84,6 +85,33 @@ public static class LoquitoLevelBuilder
         foreach (var l in Levels) BuildLevel(l);
     }
 
+    [MenuItem("Loquito/Construir Mazmorra 2")]
+    public static void BuildMazmorra2Only()
+    {
+        if (!Application.isBatchMode && !EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
+        ConfigureSprites();
+        ConfigureAudio();
+        ConfigureTiles();
+        BuildDragonPrefabs();
+        BuildLevel(Levels[1]);
+        AssetDatabase.SaveAssets();
+        Debug.Log("[Loquito] Mazmorra 2 reconstruida con El Dragón Borracho.");
+    }
+
+    [MenuItem("Loquito/Construir Mazmorra 3")]
+    public static void BuildMazmorra3Only()
+    {
+        if (!Application.isBatchMode && !EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
+        ConfigureSprites();
+        ConfigureAudio();
+        ConfigureTiles();
+        UpdateLoquito();
+        BuildSenoraPrefabs();
+        BuildLevel(Levels[2]);
+        AssetDatabase.SaveAssets();
+        Debug.Log("[Loquito] Mazmorra 3 reconstruida con La Señora.");
+    }
+
     /// <summary>Escenas que ya no forman parte del juego (el juego son 6 escenas).</summary>
     static void DeleteOldScenes()
     {
@@ -114,6 +142,37 @@ public static class LoquitoLevelBuilder
             t.colliderType = Tile.ColliderType.Grid;
             EditorUtility.SetDirty(t);
         }
+        if (!AssetDatabase.IsValidFolder(Tiles + "Mazmorra3")) AssetDatabase.CreateFolder(Tiles.TrimEnd('/'), "Mazmorra3");
+        string[] m3Tiles =
+        {
+            "piso_alfombra_1", "piso_alfombra_2", "piso_ajedrez", "piso_roseton", "piso_losa_1", "piso_losa_2",
+            "piedra_clara_1", "piedra_clara_2", "piedra_clara_3", "piedra_clara_4",
+            "piedra_oscura_1", "piedra_oscura_2", "piedra_oscura_3", "piedra_oscura_4",
+            "piedra_musgo_1", "piedra_musgo_2", "plataforma_1", "plataforma_2"
+        };
+        for (int i = 0; i < m3Tiles.Length; i++)
+        {
+            string n = m3Tiles[i];
+            string path = $"{Tiles}Mazmorra3/{n}.asset";
+            var t = AssetDatabase.LoadAssetAtPath<Tile>(path);
+            if (t == null) { t = ScriptableObject.CreateInstance<Tile>(); AssetDatabase.CreateAsset(t, path); }
+            t.sprite = S($"Mazmorra3/Tiles/{n}.png");
+            t.colliderType = Tile.ColliderType.Grid;
+            EditorUtility.SetDirty(t);
+        }
+        // Crear el prefab de Tile Palette para Mazmorra 3
+        var palGo = new GameObject("PaletaMazmorra3");
+        palGo.AddComponent<Grid>();
+        var palLayer = Child(palGo, "Layer1", Vector3.zero);
+        var palMap = palLayer.AddComponent<Tilemap>();
+        palLayer.AddComponent<TilemapRenderer>();
+        for (int i = 0; i < m3Tiles.Length; i++)
+        {
+            var tileAsset = AssetDatabase.LoadAssetAtPath<TileBase>($"{Tiles}Mazmorra3/{m3Tiles[i]}.asset");
+            palMap.SetTile(new Vector3Int(i % 6, -(i / 6), 0), tileAsset);
+        }
+        PrefabUtility.SaveAsPrefabAsset(palGo, $"{Tiles}Mazmorra3/PaletaMazmorra3.prefab");
+        Object.DestroyImmediate(palGo);
         AssetDatabase.SaveAssets();
     }
 
@@ -152,7 +211,8 @@ public static class LoquitoLevelBuilder
                 var imp = AssetImporter.GetAtPath(p) as TextureImporter;
                 if (imp == null) continue;
                 bool ui = p.Contains("/Propios/UI/") || p.Contains("/Resources/Menu/");
-                bool center = ui || p.Contains("/Esbirro/") || p.Contains("chancla_proyectil") || p.Contains("/Parque/Tiles/");
+                bool center = ui || p.Contains("/Esbirro/") || p.Contains("chancla_proyectil") || p.Contains("/Parque/Tiles/") || p.Contains("/Mazmorra3/Tiles/")
+                              || p.Contains("/Dragon/ave/") || p.Contains("/Dragon/bola_fuego/") || p.Contains("/Senora/ave/");
                 int ppu = p.Contains("/Parque/Carteles/") || p.Contains("/Parque/Fondos/") ? 32 : 16;
                 var filter = ui ? FilterMode.Bilinear : FilterMode.Point;   // la interfaz se agranda: filtro suave
                 bool changed = imp.textureType != TextureImporterType.Sprite || imp.spritePixelsPerUnit != ppu || imp.filterMode != filter
@@ -181,6 +241,14 @@ public static class LoquitoLevelBuilder
         var root = PrefabUtility.LoadPrefabContents(lp);
         var dbg = root.GetComponent("DebugHUD");
         if (dbg != null) Object.DestroyImmediate(dbg);
+        var combat = root.GetComponent<PlayerCombat>();
+        if (combat != null)
+        {
+            Set(combat, "groundHitboxOffset", new Vector2(1.55f, 1.4f));
+            Set(combat, "groundHitboxSize", new Vector2(2.2f, 1.65f));
+            Set(combat, "airHitboxOffset", new Vector2(1.3f, 2.0f));
+            Set(combat, "airHitboxSize", new Vector2(3.2f, 3.6f));
+        }
         PrefabUtility.SaveAsPrefabAsset(root, lp);
         PrefabUtility.UnloadPrefabContents(root);
     }
@@ -242,6 +310,9 @@ public static class LoquitoLevelBuilder
         var bcd = boss.AddComponent<ContactDamage>(); Set(bcd, "body", bcol); Set(bcd, "playerLayer", jug);
         SavePrefab(boss, "Campanero");
 
+        BuildDragonPrefabs();
+        BuildSenoraPrefabs();
+
         // Duende: sin fricción para que no se pegue a paredes ni bordes
         var pm = AssetDatabase.LoadAssetAtPath<PhysicsMaterial2D>("Assets/Materials/SinFriccion.physicsMaterial2D");
         EditPrefab("Duende", root => root.GetComponent<Rigidbody2D>().sharedMaterial = pm);
@@ -278,6 +349,119 @@ public static class LoquitoLevelBuilder
             (7, "Botella de chela", "Rómpela y tendrás un arma.\nPresiona J (botón X) para atacar. Tres golpes seguidos hacen un combo.", S("UI/item_botella.png")),
             (8, "Calcetas del Verde", "Calcetas de la suerte.\nPresiona Espacio otra vez en el aire para hacer doble salto.", S("UI/item_calcetas.png")));
         SavePrefab(martha, "MarthaLaLoca");
+    }
+
+    static void BuildDragonPrefabs()
+    {
+        int jug = 1 << LayerMask.NameToLayer("Jugador"), suelo = 1 << LayerMask.NameToLayer("Suelo");
+        int ene = LayerMask.NameToLayer("Enemigo");
+
+        // Bola de fuego lenta del Dragón
+        var fb = new GameObject("BolaFuegoDragon");
+        var fbsr = fb.AddComponent<SpriteRenderer>();
+        var fbFrames = Frames("Enemigos/Dragon/bola_fuego");
+        fbsr.sprite = fbFrames[0]; fbsr.sortingOrder = 12;
+        var fbloop = fb.AddComponent<SpriteLoop>();
+        Set(fbloop, "frames", fbFrames.Take(5).ToArray()); Set(fbloop, "framesPerSecond", 10f);
+        var fbproj = fb.AddComponent<Projectile>();
+        fb.transform.localScale = new Vector3(0.5f, 0.5f, 1f); Set(fbproj, "spinSpeed", 0f); Set(fbproj, "lifetime", 6f);
+        Set(fbproj, "playerLayer", jug); Set(fbproj, "groundLayer", suelo);
+        var fbPrefab = SavePrefab(fb, "BolaFuegoDragon");
+
+        // Ave perseguidora del Dragón (3 segundos)
+        var bird = new GameObject("AveDragon");
+        var birdsr = bird.AddComponent<SpriteRenderer>();
+        var birdFrames = Frames("Enemigos/Dragon/ave");
+        birdsr.sprite = birdFrames[0]; birdsr.sortingOrder = 12;
+        var hb = bird.AddComponent<HomingBird>();
+        Set(hb, "spriteRenderer", birdsr); Set(hb, "flapFrames", birdFrames); Set(hb, "flapFps", 12f);
+        bird.transform.localScale = new Vector3(0.5f, 0.5f, 1f);
+        var birdPrefab = SavePrefab(bird, "AveDragon");
+
+        // Onda expansiva terrestre del Dragón
+        var wave = new GameObject("OndaExpansiva");
+        var wavesr = wave.AddComponent<SpriteRenderer>();
+        var waveFrames = Frames("Enemigos/Dragon/onda");
+        wavesr.sprite = waveFrames[0]; wavesr.sortingOrder = 11;
+        var gsw = wave.AddComponent<GroundShockwave>();
+        Set(gsw, "spriteRenderer", wavesr); Set(gsw, "waveFrames", waveFrames);
+        Set(gsw, "speed", 7f); Set(gsw, "lifetime", 1.6f);
+        Set(gsw, "playerLayer", jug); Set(gsw, "groundLayer", suelo);
+        var wavePrefab = SavePrefab(wave, "OndaExpansiva");
+
+        // Jefe Dragón (Mazmorra 2)
+        var dragon = new GameObject("Dragon"); dragon.layer = ene;
+        var drb = dragon.AddComponent<Rigidbody2D>(); drb.bodyType = RigidbodyType2D.Kinematic;
+        var dcol = dragon.AddComponent<BoxCollider2D>(); dcol.size = new Vector2(2.6f, 4.6f); dcol.offset = new Vector2(0, 2.3f);
+        var dvis = Child(dragon, "Sprite", Vector3.zero); dvis.layer = ene;
+        var dsr = dvis.AddComponent<SpriteRenderer>(); dsr.sprite = Frames("Enemigos/Dragon/quieto")[0]; dsr.sortingOrder = 6;
+        var dsp = Child(dragon, "PuntoDisparo", new Vector3(1.5f, 2.4f, 0));
+        var dh = dragon.AddComponent<Health>(); Set(dh, "maxHealth", 15); Set(dh, "destroyOnDeath", false); Set(dh, "hitStunTime", 0f); Set(dh, "spriteRenderer", dsr);
+        var bd = dragon.AddComponent<BossDragon>();
+        Set(bd, "spriteRenderer", dsr);
+        Set(bd, "idleFrames", Frames("Enemigos/Dragon/quieto"));
+        Set(bd, "drinkFrames", Frames("Enemigos/Dragon/trago"));
+        Set(bd, "swayFrames", Frames("Enemigos/Dragon/contoneo"));
+        Set(bd, "slashFrames", Frames("Enemigos/Dragon/rasguno"));
+        Set(bd, "chargeFrames", Frames("Enemigos/Dragon/embestida"));
+        Set(bd, "throwBirdFrames", Frames("Enemigos/Dragon/lanzar_ave"));
+        Set(bd, "defeatedFrames", Frames("Enemigos/Dragon/derrotado"));
+        Set(bd, "playerLayer", jug);
+        Set(bd, "fireballPrefab", fbPrefab.GetComponent<Projectile>());
+        Set(bd, "birdPrefab", birdPrefab.GetComponent<HomingBird>());
+        Set(bd, "shockwavePrefab", wavePrefab.GetComponent<GroundShockwave>());
+        Set(bd, "spawnPoint", dsp.transform);
+        var dcd = dragon.AddComponent<ContactDamage>(); Set(dcd, "body", dcol); Set(dcd, "playerLayer", jug);
+        SavePrefab(dragon, "Dragon");
+    }
+
+    static void BuildSenoraPrefabs()
+    {
+        int jug = 1 << LayerMask.NameToLayer("Jugador"), suelo = 1 << LayerMask.NameToLayer("Suelo");
+        int ene = LayerMask.NameToLayer("Enemigo");
+
+        // Ave perseguidora de La Señora (3 segundos)
+        var bird = new GameObject("AveSenora");
+        var birdsr = bird.AddComponent<SpriteRenderer>();
+        var birdFrames = Frames("Enemigos/Senora/ave");
+        birdsr.sprite = birdFrames[0]; birdsr.sortingOrder = 12;
+        var hb = bird.AddComponent<HomingBird>();
+        Set(hb, "spriteRenderer", birdsr); Set(hb, "flapFrames", birdFrames); Set(hb, "flapFps", 12f);
+        bird.transform.localScale = new Vector3(0.5f, 0.5f, 1f);
+        Set(hb, "speed", 4.2f); Set(hb, "chaseDuration", 3f); Set(hb, "radius", 0.28f); Set(hb, "playerLayer", jug); Set(hb, "groundLayer", suelo);
+        var birdPrefab = SavePrefab(bird, "AveSenora");
+
+        // Onda expansiva morada de La Señora
+        var wave = new GameObject("OndaExpansivaSenora");
+        var wavesr = wave.AddComponent<SpriteRenderer>();
+        var waveFrames = Frames("Enemigos/Senora/onda");
+        wavesr.sprite = waveFrames[0]; wavesr.sortingOrder = 11;
+        var gsw = wave.AddComponent<GroundShockwave>();
+        Set(gsw, "spriteRenderer", wavesr); Set(gsw, "waveFrames", waveFrames);
+        Set(gsw, "speed", 7.5f); Set(gsw, "lifetime", 1.6f);
+        Set(gsw, "playerLayer", jug); Set(gsw, "groundLayer", suelo);
+        var wavePrefab = SavePrefab(wave, "OndaExpansivaSenora");
+
+        // Jefa La Señora (Mazmorra 3)
+        var senora = new GameObject("LaSenora"); senora.layer = ene;
+        var srb = senora.AddComponent<Rigidbody2D>(); srb.bodyType = RigidbodyType2D.Kinematic;
+        var scol = senora.AddComponent<BoxCollider2D>(); scol.size = new Vector2(2.6f, 4.6f); scol.offset = new Vector2(0, 2.3f);
+        var svis = Child(senora, "Sprite", Vector3.zero); svis.layer = ene;
+        var ssr = svis.AddComponent<SpriteRenderer>(); ssr.sprite = Frames("Enemigos/Senora/quieto")[0]; ssr.sortingOrder = 6;
+        var sh = senora.AddComponent<Health>(); Set(sh, "maxHealth", 20); Set(sh, "destroyOnDeath", false); Set(sh, "hitStunTime", 0f); Set(sh, "spriteRenderer", ssr);
+        var bs = senora.AddComponent<BossSenora>();
+        Set(bs, "spriteRenderer", ssr);
+        Set(bs, "idleFrames", Frames("Enemigos/Senora/quieto"));
+        Set(bs, "punchFrames", Frames("Enemigos/Senora/golpe"));
+        Set(bs, "kickFrames", Frames("Enemigos/Senora/patada"));
+        Set(bs, "chargeFrames", Frames("Enemigos/Senora/embestida"));
+        Set(bs, "throwBirdFrames", Frames("Enemigos/Senora/lanzar_ave"));
+        Set(bs, "defeatedFrames", Frames("Enemigos/Senora/derrotada"));
+        Set(bs, "playerLayer", jug);
+        Set(bs, "birdPrefab", birdPrefab.GetComponent<HomingBird>());
+        Set(bs, "shockwavePrefab", wavePrefab.GetComponent<GroundShockwave>());
+        var scd = senora.AddComponent<ContactDamage>(); Set(scd, "body", scol); Set(scd, "playerLayer", jug);
+        SavePrefab(senora, "LaSenora");
     }
 
     static readonly string[] MarthaLines =
@@ -334,6 +518,27 @@ public static class LoquitoLevelBuilder
                 if (!Solid(x, y + 1)) return ParkTile("pasto");
                 return Solid(x, y + 2) && Solid(x, y + 3) ? ParkTile("tierra_oscura") : ParkTile("tierra");
             }
+            if (data.number == 3)
+            {
+                // Superficie: alterna tramos de alfombra roja/dorada y losas decoradas
+                if (!Solid(x, y + 1))
+                {
+                    int section = (x / 4) % 3;
+                    if (section == 0) return M3Tile((x % 2 == 0) ? "piso_alfombra_1" : "piso_alfombra_2");
+                    if (section == 1) return M3Tile((x % 2 == 0) ? "piso_losa_1" : "piso_losa_2");
+                    return M3Tile((x % 2 == 0) ? "piso_ajedrez" : "piso_roseton");
+                }
+                // Muros y bordes: alterna bloques de piedra clara (beige) y piedra gris oscura
+                bool edge3 = !Solid(x - 1, y) || !Solid(x + 1, y) || !Solid(x, y - 1) || !Solid(x, y + 2);
+                int idx = (Mathf.Abs(x * 3 + y * 5) % 4) + 1;
+                if (edge3)
+                {
+                    bool lightStone = ((x / 3) + (y / 2)) % 2 == 0;
+                    return M3Tile(lightStone ? $"piedra_clara_{idx}" : $"piedra_oscura_{idx}");
+                }
+                // Relleno interior: piedra oscura y piedra con musgo
+                return M3Tile(((x + y) % 3 == 0) ? $"piedra_musgo_{(x % 2) + 1}" : $"piedra_oscura_{((x + y) % 2) + 3}");
+            }
             int pair = ((x / 2) * 7 + (y / 2) * 3) % 2 == 0 ? 1 : 4;   // alterna los dos estilos de bloque
             int c = pair + (x % 2);
             if (!Solid(x, y + 1)) return T(c, 7);                       // cara superior
@@ -344,6 +549,7 @@ public static class LoquitoLevelBuilder
         var entities = new List<(char c, int x, int y)>();
         var breakable = new List<Vector2Int>();
         var gateCells = new List<Vector2Int>();
+        var platformCells = new List<Vector2Int>();
         Vector2Int arenaMin = Vector2Int.zero, arenaMax = Vector2Int.zero;
         for (int y = 0; y < H; y++)
             for (int x = 0; x < W; x++)
@@ -354,12 +560,33 @@ public static class LoquitoLevelBuilder
                     case '#': map.SetTile(new Vector3Int(x, y, 0), TileFor(x, y)); break;
                     case 'B': breakable.Add(new Vector2Int(x, y)); break;
                     case 'G': gateCells.Add(new Vector2Int(x, y)); break;
+                    case 'T': platformCells.Add(new Vector2Int(x, y)); break;
                     case '[': arenaMin = new Vector2Int(x, y); break;
                     case ']': arenaMax = new Vector2Int(x, y); break;
                     case ' ': break;
                     default: entities.Add((c, x, y)); break;
                 }
             }
+
+        // ---- Plataformas atravesables desde abajo (se puede saltar a través de ellas y quedarse arriba) ----
+        if (platformCells.Count > 0)
+        {
+            var plat = Child(grid, "Plataformas", Vector3.zero); plat.layer = sueloLayer;   // capa Suelo: el jugador las detecta como piso
+            var pmap = plat.AddComponent<Tilemap>(); plat.AddComponent<TilemapRenderer>().sortingOrder = 0;
+            var prb = plat.AddComponent<Rigidbody2D>(); prb.bodyType = RigidbodyType2D.Static;
+            var ptc = plat.AddComponent<TilemapCollider2D>(); ptc.compositeOperation = Collider2D.CompositeOperation.Merge;
+            var pcc = plat.AddComponent<CompositeCollider2D>(); pcc.geometryType = CompositeCollider2D.GeometryType.Polygons; pcc.usedByEffector = true;
+            var eff = plat.AddComponent<PlatformEffector2D>();
+            eff.useOneWay = true; eff.useOneWayGrouping = true; eff.surfaceArc = 170f; eff.useSideFriction = false; eff.useSideBounce = false;
+            foreach (var pc in platformCells)
+            {
+                var pTile = data.number == 3 ? M3Tile((pc.x % 2 == 0) ? "plataforma_1" : "plataforma_2") : T(1 + (pc.x % 2), 7);
+                pmap.SetTile(new Vector3Int(pc.x, pc.y, 0), pTile);
+            }
+            pmap.CompressBounds();
+            ptc.ProcessTilemapChanges();
+            pcc.GenerateGeometry();
+        }
 
         // ---- Muro falso (cuarto secreto) ----
         if (breakable.Count > 0)
@@ -383,7 +610,12 @@ public static class LoquitoLevelBuilder
             var cmap = cover.AddComponent<Tilemap>(); cover.AddComponent<TilemapRenderer>().sortingOrder = 9;
             foreach (int row in breakable.Select(b => b.y).Distinct())
                 for (int x = bx1 + 1; x < W && !Solid(x, row); x++)
-                    cmap.SetTile(new Vector3Int(x, row, 0), data.IsPark ? ParkTile("tierra") : T(1 + (x % 2), 8));   // relleno liso, sin "superficie"
+                {
+                    var cTile = data.IsPark ? ParkTile("tierra")
+                              : data.number == 3 ? M3Tile((x % 2 == 0) ? "piedra_clara_1" : "piedra_oscura_1")
+                              : T(1 + (x % 2), 8);
+                    cmap.SetTile(new Vector3Int(x, row, 0), cTile);   // relleno liso, sin "superficie"
+                }
         }
 
         // ---- Entidades ----
@@ -396,7 +628,8 @@ public static class LoquitoLevelBuilder
         }
         var enemies = new GameObject("Enemigos").transform;
         var objects = new GameObject("Objetos").transform;
-        GameObject player = null; BossCampanero boss = null; Antenna antenna = null;
+        GameObject player = null; BossCampanero boss = null; BossDragon dragonBoss = null; BossSenora senoraBoss = null; Antenna antenna = null;
+        bool respawnEnemies = data.number == 2 || data.number == 3;
         foreach (var (c, x, y) in entities)
         {
             float cx = x + 0.5f;
@@ -405,14 +638,41 @@ public static class LoquitoLevelBuilder
                 case 'P': player = Spawn("Loquito", cx, y + 0.05f, null); break;
                 case 'C': Spawn("Checkpoint", cx, y, objects); break;
                 case 'H': Spawn("Panalito", cx, y + 0.2f, objects); break;
-                case 'D': Spawn("Duende", cx, y + 0.1f, enemies); break;
-                case 'E': Spawn("EsbirroAlado", cx, y + 0.5f, enemies); break;
+                case 'V':   // panalito de la sala del jefe: reaparece cuando el jugador es noqueado
+                    Set(Spawn("Panalito", cx, y + 0.2f, objects).GetComponent<PanalitoPickup>(), "respawnWhenPlayerRespawns", true);
+                    break;
+                case 'D':
+                    var dEnemy = Spawn("Duende", cx, y + 0.1f, enemies);
+                    if (respawnEnemies) Set(dEnemy.GetComponent<Health>(), "respawnOnPlayerRespawn", true);
+                    break;
+                case 'E':
+                    var eEnemy = Spawn("EsbirroAlado", cx, y + 0.5f, enemies);
+                    if (respawnEnemies) Set(eEnemy.GetComponent<Health>(), "respawnOnPlayerRespawn", true);
+                    break;
                 case 'A': Spawn("AngelBlanco", cx, y, enemies); break;
                 case 'J':
-                    var bgo = Spawn("Campanero", cx, y, enemies);
-                    boss = bgo.GetComponent<BossCampanero>();
-                    Set(boss, "bossName", data.bossName); Set(boss, "telegraphTime", data.telegraph); Set(boss, "pauseBetweenAttacks", data.pause);
-                    Set(boss, "chanclasPerThrow", data.chanclas); Set(boss, "aimAtPlayer", true);
+                    if (data.number == 2)
+                    {
+                        var dgo = Spawn("Dragon", cx, y, enemies);
+                        dragonBoss = dgo.GetComponent<BossDragon>();
+                        Set(dragonBoss, "bossName", data.bossName);
+                        Set(dragonBoss, "telegraphTime", data.telegraph);
+                        Set(dragonBoss, "pauseBetweenAttacks", data.pause);
+                    }
+                    else if (data.number == 3)
+                    {
+                        var sgo = Spawn("LaSenora", cx, y, enemies);
+                        senoraBoss = sgo.GetComponent<BossSenora>();
+                        Set(senoraBoss, "bossName", data.bossName);
+                        Set(senoraBoss, "telegraphTime", data.telegraph);
+                    }
+                    else
+                    {
+                        var bgo = Spawn("Campanero", cx, y, enemies);
+                        boss = bgo.GetComponent<BossCampanero>();
+                        Set(boss, "bossName", data.bossName); Set(boss, "telegraphTime", data.telegraph); Set(boss, "pauseBetweenAttacks", data.pause);
+                        Set(boss, "chanclasPerThrow", data.chanclas); Set(boss, "aimAtPlayer", true);
+                    }
                     break;
                 case 'N':
                     antenna = Spawn("Antena", cx, y, objects).GetComponent<Antenna>();
@@ -433,14 +693,17 @@ public static class LoquitoLevelBuilder
             }
         }
         if (antenna != null && boss != null) Set(antenna, "requiredBoss", boss);
+        if (antenna != null && dragonBoss != null) Set(antenna, "requiredDragonBoss", dragonBoss);
+        if (antenna != null && senoraBoss != null) Set(antenna, "requiredSenoraBoss", senoraBoss);
 
         // ---- Arena del jefe ----
-        if (gateCells.Count > 0 && boss != null)
+        if (gateCells.Count > 0 && (boss != null || dragonBoss != null || senoraBoss != null))
         {
             int gx0 = gateCells.Min(g => g.x), gx1 = gateCells.Max(g => g.x), gy0 = gateCells.Min(g => g.y), gy1 = gateCells.Max(g => g.y);
             var gate = new GameObject("Compuerta"); gate.layer = sueloLayer;
             gate.transform.position = new Vector3((gx0 + gx1 + 1) / 2f, (gy0 + gy1 + 1) / 2f, 0);
-            var gsr = gate.AddComponent<SpriteRenderer>(); gsr.sprite = SpriteOfTile(T(4, 8)); gsr.drawMode = SpriteDrawMode.Tiled;
+            var gateTile = data.number == 3 ? M3Tile("piedra_oscura_1") : T(4, 8);
+            var gsr = gate.AddComponent<SpriteRenderer>(); gsr.sprite = SpriteOfTile(gateTile); gsr.drawMode = SpriteDrawMode.Tiled;
             gsr.size = new Vector2(gx1 - gx0 + 1, gy1 - gy0 + 1); gsr.sortingOrder = 1; gsr.color = new Color(0.75f, 0.7f, 0.8f);
             var gcol = gate.AddComponent<BoxCollider2D>(); gcol.size = gsr.size;
             var gr = gate.AddComponent<Rigidbody2D>(); gr.bodyType = RigidbodyType2D.Kinematic;
@@ -450,7 +713,18 @@ public static class LoquitoLevelBuilder
             arena.transform.position = new Vector3((ax0 + ax1) / 2f, (ay0 + ay1) / 2f, 0);
             var acol = arena.AddComponent<BoxCollider2D>(); acol.isTrigger = true; acol.size = new Vector2(ax1 - ax0, ay1 - ay0);
             var ba = arena.AddComponent<BossArena>();
-            Set(ba, "boss", boss); Set(ba, "gate", gate.transform); Set(ba, "gateOpenHeight", (float)(gy1 - gy0 + 2));
+            if (boss != null) Set(ba, "boss", boss);
+            if (dragonBoss != null)
+            {
+                Set(ba, "dragonBoss", dragonBoss);
+                Set(ba, "introSfx", "Presentacion-dragon");
+            }
+            if (senoraBoss != null)
+            {
+                Set(ba, "senoraBoss", senoraBoss);
+                Set(ba, "introSfx", "Presentacion_LaSeñora");
+            }
+            Set(ba, "gate", gate.transform); Set(ba, "gateOpenHeight", (float)(gy1 - gy0 + 2));
             // Área visible durante la pelea: la arena con sus muros, piso y techo
             Set(ba, "cameraMin", new Vector2(arenaMin.x - 2f, 0f));
             Set(ba, "cameraMax", new Vector2(arenaMax.x + 3f, arenaMax.y + 3f));
@@ -539,6 +813,13 @@ public static class LoquitoLevelBuilder
     {
         var t = AssetDatabase.LoadAssetAtPath<TileBase>($"{Tiles}Parque/{name}.asset");
         if (t == null) throw new System.Exception("Falta el tile del parque " + name);
+        return t;
+    }
+
+    static TileBase M3Tile(string name)
+    {
+        var t = AssetDatabase.LoadAssetAtPath<TileBase>($"{Tiles}Mazmorra3/{name}.asset");
+        if (t == null) throw new System.Exception("Falta el tile de Mazmorra 3 " + name);
         return t;
     }
 
@@ -633,14 +914,20 @@ public static class LoquitoLevelBuilder
         string folder = park ? "Parque/Decoracion" : "Decoracion";
         string[] tall = park
             ? new[] { "arbol_1", "arbol_2", "arbol_rosa", "arbol_naranja", "pino_1", "pino_2", "kiosco", "farol_doble", "arco_flores", "farol_1" }
+            : data.number == 3
+            ? new[] { "estatua_cruz", "estatua_monje", "estatua_virgen", "vitral_grande", "vitral_roseton", "vitral_alto", "pilar_1", "pilar_2", "librero_alto", "estandarte_azul_grande", "puerta_2", "puerta_3" }
             : new[] { "estatua_cruz", "estatua_monje", "estatua_virgen", "vitral_grande", "vitral_roseton", "vitral_alto" };
         string[] medium = park
             ? new[] { "banca_1", "banca_2", "banca_3", "banca_4", "fuente", "maceta_larga", "maceta_2", "arco_seto", "tablero", "mesa_picnic", "carrito", "reja", "cipres" }
+            : data.number == 3
+            ? new[] { "banca_1", "banca_2", "banca_3", "banca_larga", "pulpito", "altar", "librero", "librero_alto", "pila_bautismal", "estandarte_rojo", "estandarte_morado", "estandarte_azul", "estandarte_azul_grande", "cuadro_1", "cuadro_2", "vitral_chico_1", "vitral_chico_2", "vitral_chico_3", "candil" }
             : new[] { "banca_1", "banca_2", "banca_3", "pulpito", "altar", "librero", "pila_bautismal", "estandarte_rojo", "estandarte_morado", "estandarte_azul", "cuadro_1", "cuadro_2", "vitral_chico_1", "vitral_chico_2" };
         string[] small = park
             ? new[] { "maceta_1", "maceta_3", "bebedero_aves", "bote_basura" }
+            : data.number == 3
+            ? new[] { "barril", "jarron", "atril", "candelabro_doble", "candelabro_pared", "antorcha", "vela_pared" }
             : new[] { "barril", "jarron", "atril", "candelabro_doble" };
-        var hanging = new HashSet<string> { "estandarte_rojo", "estandarte_morado", "estandarte_azul", "cuadro_1", "cuadro_2", "vitral_chico_1", "vitral_chico_2" };
+        var hanging = new HashSet<string> { "estandarte_rojo", "estandarte_morado", "estandarte_azul", "estandarte_azul_grande", "cuadro_1", "cuadro_2", "vitral_chico_1", "vitral_chico_2", "vitral_chico_3", "candil", "candelabro_pared", "vela_pared" };
 
         int Headroom(int x, int y) { int h = 0; while (y + h < H && at(x, y + h) == ' ') h++; return h; }
         // El cartel grande (1) ocupa más espacio
