@@ -11,14 +11,41 @@ public class PanalitoPickup : MonoBehaviour
     [SerializeField] private int heal = 1;
     [SerializeField] private float bobAmplitude = 0.15f;
     [SerializeField] private float bobSpeed = 2f;
+    [Tooltip("Si está activo, no se destruye al recogerlo: reaparece cuando el jugador es noqueado y reaparece en el checkpoint.")]
+    [SerializeField] private bool respawnWhenPlayerRespawns = false;
 
     private Vector3 start;
     private bool taken;
+    private PlayerHealth subscribedPlayer;
 
     private void Start()
     {
         start = transform.position;
         GetComponent<Collider2D>().isTrigger = true;
+        if (respawnWhenPlayerRespawns)
+        {
+            var p = GameObject.FindGameObjectWithTag("Player");
+            if (p != null)
+            {
+                subscribedPlayer = p.GetComponent<PlayerHealth>();
+                if (subscribedPlayer != null) subscribedPlayer.OnRespawn += Restore;
+            }
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if (subscribedPlayer != null) subscribedPlayer.OnRespawn -= Restore;
+    }
+
+    private void Restore()
+    {
+        if (!taken) return;
+        StopAllCoroutines();
+        taken = false;
+        transform.position = start;
+        gameObject.SetActive(true);
+        if (anim != null) anim.Play("gira");
     }
 
     private void Update()
@@ -44,6 +71,7 @@ public class PanalitoPickup : MonoBehaviour
         yield return new WaitForSeconds(0.35f);
         if (anim != null) anim.Play("desaparecer");
         yield return new WaitForSeconds(0.3f);
-        Destroy(gameObject);
+        if (respawnWhenPlayerRespawns) gameObject.SetActive(false);
+        else Destroy(gameObject);
     }
 }
