@@ -13,9 +13,22 @@ public class Projectile : MonoBehaviour
     [SerializeField] private LayerMask groundLayer;
     [Tooltip("Giro del sprite en grados por segundo (p. ej. la chancla).")]
     [SerializeField] private float spinSpeed = 0f;
+    [Tooltip("Si está activo, atraviesa las plataformas de un solo sentido (solo desaparece en muros, piso y techo).")]
+    [SerializeField] private bool ignoreOneWayPlatforms = false;
 
     private Vector2 direction = Vector2.right;
     private float dieTime;
+
+    /// <summary>
+    /// ¿Toca algo sólido de la capa dada? Con <paramref name="ignoreOneWay"/> las plataformas atravesables no cuentan.
+    /// </summary>
+    public static bool TouchesSolid(Vector2 position, float radius, LayerMask mask, bool ignoreOneWay)
+    {
+        if (!ignoreOneWay) return Physics2D.OverlapCircle(position, radius, mask) != null;
+        foreach (var c in Physics2D.OverlapCircleAll(position, radius, mask))
+            if (c.GetComponent<PlatformEffector2D>() == null) return true;
+        return false;
+    }
 
     public void Launch(Vector2 dir)
     {
@@ -44,7 +57,7 @@ public class Projectile : MonoBehaviour
             return;
         }
 
-        if (Physics2D.OverlapCircle(transform.position, radius * 0.5f, groundLayer) != null || Time.time >= dieTime)
+        if (TouchesSolid(transform.position, radius * 0.5f, groundLayer, ignoreOneWayPlatforms) || Time.time >= dieTime)
             Destroy(gameObject);
     }
 
