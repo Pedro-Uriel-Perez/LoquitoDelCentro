@@ -15,8 +15,15 @@ public class Health : MonoBehaviour
     [SerializeField] private float destroyDelay = 0.6f;
     [Tooltip("Desactivar para objetos que deben quedarse al morir (p. ej. el jefe derrotado en el suelo).")]
     [SerializeField] private bool destroyOnDeath = true;
+    [Tooltip("Si está activo, el enemigo reaparece en su posición inicial cuando el jugador es derrotado.")]
+    [SerializeField] private bool respawnOnPlayerRespawn = false;
 
     private Rigidbody2D rb;
+    private RigidbodyType2D initialBodyType;
+    private Vector3 initialPosition;
+    private Vector3 initialScale;
+    private PlayerHealth subscribedPlayer;
+    private bool shouldRespawn;
     private float stunnedUntil;
 
     public int Current { get; private set; }
@@ -30,14 +37,48 @@ public class Health : MonoBehaviour
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
+        if (rb != null) initialBodyType = rb.bodyType;
+        initialPosition = transform.position;
+        initialScale = transform.localScale;
         if (spriteRenderer == null) spriteRenderer = GetComponentInChildren<SpriteRenderer>();
         Current = maxHealth;
     }
 
+    private void Start()
+    {
+        string sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+        shouldRespawn = respawnOnPlayerRespawn ||
+                        (destroyOnDeath && GetComponent<SecretWall>() == null &&
+                         (sceneName == "Mazmorra2" || sceneName == "Mazmorra3"));
+
+        if (shouldRespawn)
+        {
+            var p = GameObject.FindGameObjectWithTag("Player");
+            if (p != null)
+            {
+                subscribedPlayer = p.GetComponent<PlayerHealth>();
+                if (subscribedPlayer != null) subscribedPlayer.OnRespawn += RespawnEnemy;
+            }
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if (subscribedPlayer != null) subscribedPlayer.OnRespawn -= RespawnEnemy;
+    }
+
     private void Update()
     {
-        // Enemigos que caen por un hoyo fuera del mapa: se eliminan.
-        if (!IsDead && transform.position.y < -15f) Destroy(gameObject);
+        // Enemigos que caen por un hoyo fuera del mapa: se eliminan (o se desactivan si deben regenerarse).
+        if (!IsDead && transform.position.y < -15f)
+        {
+            if (shouldRespawn)
+            {
+                IsDead = true;
+                gameObject.SetActive(false);
+            }
+            else Destroy(gameObject);
+        }
     }
 
     public void TakeDamage(int amount, Vector2 knockback)
@@ -78,9 +119,24 @@ public class Health : MonoBehaviour
     {
         StopAllCoroutines();
         IsDead = false;
+        stunnedUntil = 0f;
         Current = maxHealth;
         if (spriteRenderer != null) { spriteRenderer.color = Color.white; spriteRenderer.enabled = true; }
         foreach (var c in GetComponentsInChildren<Collider2D>(true)) c.enabled = true;
+    }
+
+    private void RespawnEnemy()
+    {
+        gameObject.SetActive(true);
+        ResetHealth();
+        transform.position = initialPosition;
+        transform.localScale = initialScale;
+        if (rb != null)
+        {
+            rb.bodyType = initialBodyType;
+            rb.position = initialPosition;
+            rb.linearVelocity = Vector2.zero;
+        }
     }
 
     private IEnumerator DeathRoutine()
@@ -91,6 +147,11 @@ public class Health : MonoBehaviour
             if (spriteRenderer != null) spriteRenderer.enabled = !spriteRenderer.enabled;
             yield return new WaitForSeconds(0.06f);
         }
-        Destroy(gameObject);
+        if (shouldRespawn)
+        {
+            if (spriteRenderer != null) spriteRenderer.enabled = true;
+            gameObject.SetActive(false);
+        }
+        else Destroy(gameObject);
     }
 }
