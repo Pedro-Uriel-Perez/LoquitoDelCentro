@@ -9,6 +9,8 @@ public class Antenna : MonoBehaviour
 {
     [SerializeField] private SpriteAnim anim;
     [SerializeField] private BossCampanero requiredBoss;
+    [SerializeField] private BossDragon requiredDragonBoss;
+    [SerializeField] private BossSenora requiredSenoraBoss;
     [SerializeField] private float interactRange = 2.5f;
     [SerializeField] private float levelCompleteDelay = 3.5f;
     [SerializeField] private string prompt = "E / Y: Derribar la antena";
@@ -36,11 +38,18 @@ public class Antenna : MonoBehaviour
 
         bool near = Mathf.Abs(player.position.x - transform.position.x) < interactRange &&
                     Mathf.Abs(player.position.y - transform.position.y) < 3f;
-        bool bossAlive = requiredBoss != null && !requiredBoss.IsDefeated;
+        bool bossAlive = (requiredBoss != null && !requiredBoss.IsDefeated) ||
+                         (requiredDragonBoss != null && !requiredDragonBoss.IsDefeated) ||
+                         (requiredSenoraBoss != null && !requiredSenoraBoss.IsDefeated);
 
         if (HUD.Instance != null)
         {
-            string text = !near ? null : bossAlive ? "La antena está protegida. ¡Derrota al Campanero!" : prompt;
+            string protectedText = requiredSenoraBoss != null
+                ? $"La antena está protegida. ¡Derrota a {requiredSenoraBoss.BossName}!"
+                : requiredDragonBoss != null
+                ? $"La antena está protegida. ¡Derrota a {requiredDragonBoss.BossName}!"
+                : "La antena está protegida. ¡Derrota al Campanero!";
+            string text = !near ? null : bossAlive ? protectedText : prompt;
             HUD.Instance.SetPrompt(this, text);
         }
 
