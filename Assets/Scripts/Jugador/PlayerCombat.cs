@@ -24,14 +24,16 @@ public class PlayerCombat : MonoBehaviour
     [SerializeField] private float hitboxDuration = 0.2f;
     [Tooltip("Tiempo tras terminar un golpe en el que todavía se puede encadenar el siguiente.")]
     [SerializeField] private float comboWindow = 0.35f;
+    [Tooltip("Tiempo de espera entre cada ataque para evitar spam de golpes.")]
+    [SerializeField] private float attackCooldown = 0.2f;
     [SerializeField] private Vector2 hitKnockback = new Vector2(2f, 1f);
     [SerializeField] private Vector2 finisherKnockback = new Vector2(10f, 5f);
     [Tooltip("Área de golpe en el suelo (posición local y tamaño).")]
-    [SerializeField] private Vector2 groundHitboxOffset = new Vector2(1.3f, 1.4f);
-    [SerializeField] private Vector2 groundHitboxSize = new Vector2(1.6f, 1.2f);
+    [SerializeField] private Vector2 groundHitboxOffset = new Vector2(1.55f, 1.4f);
+    [SerializeField] private Vector2 groundHitboxSize = new Vector2(2.2f, 1.65f);
     [Tooltip("Área de golpe en el aire: más grande y hacia arriba para alcanzar enemigos voladores.")]
-    [SerializeField] private Vector2 airHitboxOffset = new Vector2(1.1f, 2.0f);
-    [SerializeField] private Vector2 airHitboxSize = new Vector2(2.4f, 2.8f);
+    [SerializeField] private Vector2 airHitboxOffset = new Vector2(1.3f, 2.0f);
+    [SerializeField] private Vector2 airHitboxSize = new Vector2(3.2f, 3.6f);
 
     [Header("Cartón (bloqueo)")]
     [SerializeField] private GameObject cartonVisual;
@@ -48,6 +50,7 @@ public class PlayerCombat : MonoBehaviour
     private bool attackBuffered;
     private int nextComboStep;
     private float comboResetTime;
+    private float nextAttackAllowedTime;
     private float recoveryTimer;
 
     public bool IsAttacking { get; private set; }
@@ -80,7 +83,7 @@ public class PlayerCombat : MonoBehaviour
         if (gm.TieneBotella && input.Attack.WasPressedThisFrame() && !IsBlocking)
         {
             if (IsAttacking) attackBuffered = true;
-            else StartAttack();
+            else if (Time.time >= nextAttackAllowedTime) StartAttack();
         }
     }
 
@@ -124,10 +127,16 @@ public class PlayerCombat : MonoBehaviour
         IsAttacking = false;
         attackRoutine = null;
 
+        nextAttackAllowedTime = Time.time + attackCooldown;
         nextComboStep = inAir ? 0 : (step + 1) % comboStates.Length;
-        comboResetTime = Time.time + comboWindow;
+        comboResetTime = nextAttackAllowedTime + comboWindow;
 
-        if (attackBuffered && !inAir && nextComboStep != 0) StartAttack();
+        if (attackBuffered && !inAir && nextComboStep != 0)
+        {
+            attackBuffered = false;
+            yield return new WaitForSeconds(attackCooldown);
+            if (!IsBlocking && !IsAttacking && controller.InputEnabled) StartAttack();
+        }
         attackBuffered = false;
     }
 
@@ -141,6 +150,7 @@ public class PlayerCombat : MonoBehaviour
         IsAttacking = false;
         attackBuffered = false;
         nextComboStep = 0;
+        nextAttackAllowedTime = Time.time + attackCooldown;
     }
 
     /// <summary>
