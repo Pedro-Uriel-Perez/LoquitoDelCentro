@@ -20,6 +20,7 @@
 - [Jefes](#jefes)
 - [Objetos](#objetos)
 - [Menú, configuración y sonido](#menú-configuración-y-sonido)
+- [Capturas](#capturas)
 - [Para desarrolladores](#para-desarrolladores)
 - [Publicar en itch.io](#publicar-en-itchio)
 - [Créditos](#créditos)
@@ -141,6 +142,17 @@ Al derribar la última antena aparece la pantalla de victoria (o el final secret
   ("balbuceo") de los diálogos.
 - **Se guarda aunque cierres el juego:** volúmenes, silencio y si ya viste el final secreto. Después del final
   secreto aparece en el menú una opción para elegir la canción del menú.
+
+---
+
+## Capturas
+
+| | |
+|:---:|:---:|
+| <img src="docs/img/capturas/jardin_inicio.png" width="420"><br>El Jardín | <img src="docs/img/capturas/jardin_martha.png" width="420"><br>Martha la Loca |
+| <img src="docs/img/capturas/mazmorra1.png" width="420"><br>Mazmorra 1 | <img src="docs/img/capturas/jefe_campanero.png" width="420"><br>Sala del Campanero |
+| <img src="docs/img/capturas/mazmorra2.png" width="420"><br>Mazmorra 2 | <img src="docs/img/capturas/jefe_dragon.png" width="420"><br>Sala del Dragón Borracho |
+| <img src="docs/img/capturas/mazmorra3.png" width="420"><br>Mazmorra 3 | <img src="docs/img/capturas/jefe_senora.png" width="420"><br>Sala de La Señora |
 
 ---
 

@@ -125,7 +125,13 @@ public static class ReadmeCaptures
                 var so = new SerializedObject(arena);
                 min = so.FindProperty("cameraMin").vector2Value;
                 max = so.FindProperty("cameraMax").vector2Value;
-                focus = (min + max) * 0.5f;
+                // Centrada en el jefe (con su piso a la vista), sin salirse de la arena
+                Component boss = null;
+                foreach (var field in new[] { "boss", "dragonBoss", "senoraBoss" })
+                    if (boss == null) boss = so.FindProperty(field)?.objectReferenceValue as Component;
+                focus = boss != null ? boss.transform.position + new Vector3(0f, 4f, 0f) : (Vector3)((min + max) * 0.5f);
+                focus.x = max.x - min.x > HalfW * 2f ? Mathf.Clamp(focus.x, min.x + HalfW, max.x - HalfW) : (min.x + max.x) * 0.5f;
+                focus.y = max.y - min.y > HalfH * 2f ? Mathf.Clamp(focus.y, min.y + HalfH, max.y - HalfH) : min.y + HalfH;
                 return true;
 
             case Target.Martha:
