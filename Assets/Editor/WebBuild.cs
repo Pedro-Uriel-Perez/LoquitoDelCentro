@@ -33,6 +33,8 @@ public static class WebBuild
     {
         if (EditorUserBuildSettings.activeBuildTarget != BuildTarget.WebGL)
             EditorUserBuildSettings.SwitchActiveBuildTarget(BuildTargetGroup.WebGL, BuildTarget.WebGL);
+        // Plantilla propia (Assets/WebGLTemplates/Loquito): el juego llena la ventana en 16:9
+        PlayerSettings.WebGL.template = "PROJECT:Loquito";
 
         if (Directory.Exists(OutDir)) Directory.Delete(OutDir, true);
         var options = new BuildPlayerOptions
