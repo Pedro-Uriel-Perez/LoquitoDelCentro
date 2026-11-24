@@ -54,6 +54,12 @@ if __name__ == "__main__":
     logo = fit(logo.crop(logo.getchannel("A").point(lambda a: 255 if a > 8 else 0).getbbox()), 900)
     logo.save(os.path.join(MENU, "menu_logo.png")); print("logo", logo.size)
 
+    # Íconos de los botones táctiles (botella y cartón)
+    for name in ("botella", "carton"):
+        icon = Image.open(os.path.join(UI, f"item_{name}.png")).convert("RGBA")
+        icon = fit(icon.crop(icon.getchannel("A").getbbox()), 96)
+        icon.save(os.path.join(MENU, f"icono_{name}.png")); print("icono", name, icon.size)
+
     sheet = Image.open(os.path.join(ROOT, "botones_menu.png")).convert("RGBA")
     for cols, rows in ((TEXT_COLS, TEXT_ROWS), (ICON_COLS, ICON_ROWS)):
         for name, (x0, x1) in cols.items():

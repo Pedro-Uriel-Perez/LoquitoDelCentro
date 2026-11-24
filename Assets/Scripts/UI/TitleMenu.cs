@@ -53,7 +53,10 @@ public class TitleMenu : MonoBehaviour
             RefreshSong();
         }
 
-        UIFactory.Text(root, "Controles", "Mover: A/D · Saltar: Espacio · Botella: J · Cartón: K · Interactuar: E · Configuración: Esc / Tab",
+        string controles = Application.isMobilePlatform
+            ? "Usa los botones de la pantalla para moverte, saltar, atacar, cubrirte e interactuar · Configuración: engrane"
+            : "Mover: A/D · Saltar: Espacio · Botella: J · Cartón: K · Interactuar: E · Configuración: Esc / Tab";
+        UIFactory.Text(root, "Controles", controles,
                        11, TextAnchor.MiddleCenter, new Color(0.85f, 0.85f, 0.95f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0, 6), new Vector2(620, 20));
 
         UIFactory.EnsureEventSystem();
