@@ -204,7 +204,7 @@ function indice() {
   ];
 }
 
-function contacto(numero = "") {
+function contacto(numero = "", conReporte = true) {
   return [
     h1(`${numero}Datos de contacto`),
     p("Para dudas, reportes de errores o sugerencias, comuníquese con el equipo de desarrollo:"),
@@ -216,7 +216,7 @@ function contacto(numero = "") {
       ["Página del juego (itch.io)", "https://pedrourielperezmonzon.itch.io/loquitodelcentro"],
       ["Repositorio del proyecto (GitHub)", "https://github.com/Pedro-Uriel-Perez/LoquitoDelCentro"],
     ], [4200, 5160]),
-    p("Al reportar un error, incluya: dispositivo o navegador, versión de Android (si aplica), qué estaba haciendo y, de ser posible, una captura de pantalla."),
+    ...(conReporte ? [p("Al reportar un error, incluya: dispositivo o navegador, versión de Android (si aplica), qué estaba haciendo y, de ser posible, una captura de pantalla.")] : []),
   ];
 }
 

@@ -1,7 +1,7 @@
 # Abre cada manual en Word, actualiza el índice, guarda el .docx y exporta el PDF.
 # Uso: powershell -ExecutionPolicy Bypass -File docs/manuales/exportar_pdf.ps1 [Manual_de_Instalacion|Manual_de_Usuario]
-param([string[]]$Nombres = @('Manual_de_Instalacion', 'Manual_de_Usuario'))
-$dir = Split-Path -Parent $MyInvocation.MyCommand.Path
+param([string[]]$Nombres = @('Manual_de_Instalacion', 'Manual_de_Usuario'), [string]$Carpeta = '')
+$dir = if ($Carpeta) { (Resolve-Path $Carpeta).Path } else { Split-Path -Parent $MyInvocation.MyCommand.Path }
 function Log($m) { "{0:HH:mm:ss} {1}" -f (Get-Date), $m }
 
 $word = New-Object -ComObject Word.Application
