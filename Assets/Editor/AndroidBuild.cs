@@ -48,9 +48,11 @@ public static class AndroidBuild
         PlayerSettings.allowedAutorotateToLandscapeRight = true;
         PlayerSettings.allowedAutorotateToPortrait = false;
         PlayerSettings.allowedAutorotateToPortraitUpsideDown = false;
-        // IL2CPP con ARM64: los celulares nuevos ya solo aceptan apps de 64 bits
+        // IL2CPP solo ARM64: los celulares nuevos ya solo aceptan apps de 64 bits y así el build
+        // ocupa la mitad de disco y tarda la mitad (ARMv7 solo serviría para celulares anteriores a 2017)
         PlayerSettings.SetScriptingBackend(android, ScriptingImplementation.IL2CPP);
-        PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64 | AndroidArchitecture.ARMv7;
+        PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
+        PlayerSettings.SetIl2CppCodeGeneration(android, Il2CppCodeGeneration.OptimizeSize);
         EditorUserBuildSettings.buildAppBundle = false;   // .apk, no .aab
 
         Directory.CreateDirectory(Path.GetDirectoryName(ApkPath));

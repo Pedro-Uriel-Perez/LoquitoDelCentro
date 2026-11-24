@@ -53,7 +53,7 @@ public class Antenna : MonoBehaviour
             HUD.Instance.SetPrompt(this, text);
         }
 
-        if (near && !bossAlive && input != null && input.Interact.WasPressedThisFrame())
+        if (near && !bossAlive && input != null && input.InteractPressed)
             StartCoroutine(DestroyAntenna());
     }
 

@@ -16,6 +16,14 @@ public class LoquitoInput : MonoBehaviour
     public InputAction Block { get; private set; }
     public InputAction Interact { get; private set; }
 
+    // Lectura combinada: teclado / control (Input System) + botones táctiles en pantalla (TouchControls)
+    public float MoveValue => Mathf.Clamp(Move.ReadValue<float>() + TouchControls.Horizontal, -1f, 1f);
+    public bool JumpPressed => Jump.WasPressedThisFrame() || (TouchControls.Jump?.PressedThisFrame ?? false);
+    public bool JumpReleased => Jump.WasReleasedThisFrame() || (TouchControls.Jump?.ReleasedThisFrame ?? false);
+    public bool AttackPressed => Attack.WasPressedThisFrame() || (TouchControls.Attack?.PressedThisFrame ?? false);
+    public bool BlockHeld => Block.IsPressed() || (TouchControls.Block?.Held ?? false);
+    public bool InteractPressed => Interact.WasPressedThisFrame() || (TouchControls.Interact?.PressedThisFrame ?? false);
+
     private void Awake()
     {
         Move = new InputAction("Move", InputActionType.Value, expectedControlType: "Axis");

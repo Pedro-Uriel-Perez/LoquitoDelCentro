@@ -29,7 +29,7 @@ public class LevelExit : MonoBehaviour
                     Mathf.Abs(player.position.y - transform.position.y) < 2.5f;
         if (HUD.Instance != null) HUD.Instance.SetPrompt(this, near ? prompt : null);
 
-        if (near && input != null && input.Interact.WasPressedThisFrame())
+        if (near && input != null && input.InteractPressed)
         {
             used = true;
             int level = LevelInfo.Current != null ? LevelInfo.Current.LevelNumber : 0;

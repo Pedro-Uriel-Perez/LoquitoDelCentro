@@ -62,12 +62,12 @@ public class MarthaNPC : MonoBehaviour
             bool near = Mathf.Abs(player.position.x - transform.position.x) < talkRange &&
                         Mathf.Abs(player.position.y - transform.position.y) < 3f;
             if (hud != null) hud.SetPrompt(this, near ? "E / Y: Hablar con Martha" : null);
-            if (near && input.Interact.WasPressedThisFrame()) Begin();
+            if (near && input.InteractPressed) Begin();
             return;
         }
 
         if (waitingGift) return;
-        if (Time.unscaledTime >= advanceAllowedAt && input.Interact.WasPressedThisFrame()) Advance();
+        if (Time.unscaledTime >= advanceAllowedAt && input.InteractPressed) Advance();
     }
 
     private void Begin()

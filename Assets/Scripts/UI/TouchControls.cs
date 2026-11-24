@@ -1,21 +1,32 @@
 using UnityEngine;
-using UnityEngine.InputSystem.OnScreen;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 /// <summary>
 /// Controles táctiles para celular (Android y navegador móvil). Solo aparecen dentro de los niveles.
-/// Cada botón simula un botón de control (Input System On-Screen Controls), así que el Loquito
-/// los recibe igual que un gamepad: ◀ ▶ = cruceta, Saltar = Sur, Atacar = Oeste, Cartón = gatillo derecho
-/// (se mantiene presionado) e Interactuar = Norte. La configuración se abre con el engrane.
+/// ◀ ▶ = moverse, Saltar, Atacar, Cartón (se mantiene presionado) e Interactuar. La configuración se abre con el engrane.
+/// Los botones guardan su estado aquí y LoquitoInput lo suma al teclado y al control (sin control virtual
+/// de por medio, así los menús no reaccionan a los botones de juego).
 /// </summary>
+[DefaultExecutionOrder(-200)]   // antes que el Loquito, para que lea el estado ya actualizado en el mismo cuadro
 public class TouchControls : MonoBehaviour
 {
     private static TouchControls instance;
     private GameObject root;
 
-    private static readonly Color ButtonColor = new Color(1f, 1f, 1f, 0.28f);
+    public static readonly Color ButtonColor = new Color(1f, 1f, 1f, 0.28f);
+    public static readonly Color PressedColor = new Color(1f, 1f, 1f, 0.55f);
     private static readonly Color IconColor = new Color(1f, 1f, 1f, 0.85f);
+
+    /// <summary>Estado de los botones táctiles (cero / null si no hay controles táctiles).</summary>
+    public static float Horizontal => instance != null && instance.root.activeInHierarchy
+        ? (instance.right.Held ? 1f : 0f) - (instance.left.Held ? 1f : 0f) : 0f;
+    public static TouchButton Jump => instance != null ? instance.jump : null;
+    public static TouchButton Attack => instance != null ? instance.attack : null;
+    public static TouchButton Block => instance != null ? instance.block : null;
+    public static TouchButton Interact => instance != null ? instance.interact : null;
+
+    private TouchButton left, right, jump, attack, block, interact;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetStatics() => instance = null;
@@ -50,6 +61,12 @@ public class TouchControls : MonoBehaviour
         UIFactory.EnsureEventSystem();
     }
 
+    // Los toques llegan durante el cuadro; aquí se fijan al inicio del siguiente para que todos los scripts los vean igual
+    private void Update()
+    {
+        left.Latch(); right.Latch(); jump.Latch(); attack.Latch(); block.Latch(); interact.Latch();
+    }
+
     private void Build()
     {
         var canvas = UIFactory.CreateCanvas("Tactil_Canvas", 50);   // debajo del menú de configuración (100)
@@ -60,25 +77,24 @@ public class TouchControls : MonoBehaviour
         Sprite arrow = ArrowSprite();
 
         // Izquierda: moverse
-        var left = new Vector2(0f, 0f);
-        Button(t, "Izquierda", "<Gamepad>/dpad/left", left, new Vector2(46, 46), 64, circle, arrow, null, 180f);
-        Button(t, "Derecha", "<Gamepad>/dpad/right", left, new Vector2(124, 46), 64, circle, arrow, null, 0f);
+        var l = new Vector2(0f, 0f);
+        left = Button(t, "Izquierda", l, new Vector2(46, 46), 64, circle, arrow, null, 180f);
+        right = Button(t, "Derecha", l, new Vector2(124, 46), 64, circle, arrow, null, 0f);
 
         // Derecha: acciones
-        var right = new Vector2(1f, 0f);
-        Button(t, "Saltar", "<Gamepad>/buttonSouth", right, new Vector2(-50, 50), 70, circle, arrow, null, 90f);
-        Button(t, "Atacar", "<Gamepad>/buttonWest", right, new Vector2(-128, 40), 56, circle,
-               Icon("Menu/icono_botella"), "J", 0f);
-        Button(t, "Carton", "<Gamepad>/rightTrigger", right, new Vector2(-122, 108), 50, circle,
-               Icon("Menu/icono_carton"), "K", 0f);
-        Button(t, "Interactuar", "<Gamepad>/buttonNorth", right, new Vector2(-52, 128), 46, circle, null, "E", 0f);
+        var r = new Vector2(1f, 0f);
+        jump = Button(t, "Saltar", r, new Vector2(-50, 50), 70, circle, arrow, null, 90f);
+        attack = Button(t, "Atacar", r, new Vector2(-128, 40), 56, circle, Icon("Menu/icono_botella"), "J", 0f);
+        block = Button(t, "Carton", r, new Vector2(-122, 108), 50, circle, Icon("Menu/icono_carton"), "K", 0f);
+        interact = Button(t, "Interactuar", r, new Vector2(-52, 128), 46, circle, null, "E", 0f);
     }
 
     /// <summary>Botón redondo semitransparente con un ícono (o letra si no hay ícono).</summary>
-    private static void Button(Transform parent, string name, string controlPath, Vector2 anchor, Vector2 pos, float size,
-                               Sprite circle, Sprite icon, string fallbackText, float iconRotation)
+    private static TouchButton Button(Transform parent, string name, Vector2 anchor, Vector2 pos, float size,
+                                      Sprite circle, Sprite icon, string fallbackText, float iconRotation)
     {
         var bg = UIFactory.Image(parent, name, circle, ButtonColor, anchor, new Vector2(0.5f, 0.5f), pos, new Vector2(size, size));
+        bg.raycastTarget = true;   // UIFactory crea las imágenes sin detectar toques; el botón sí los necesita
         var go = bg.gameObject;
 
         if (icon != null)
@@ -95,12 +111,7 @@ public class TouchControls : MonoBehaviour
                                      new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(size, size));
             txt.raycastTarget = false;
         }
-
-        // El componente se agrega con el objeto apagado para que ya tenga su ruta al activarse
-        go.SetActive(false);
-        var button = go.AddComponent<OnScreenButton>();
-        button.controlPath = controlPath;
-        go.SetActive(true);
+        return go.AddComponent<TouchButton>();
     }
 
     /// <summary>Ícono desde Resources como textura (no depende de cómo se importe la imagen).</summary>

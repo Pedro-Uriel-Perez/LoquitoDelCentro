@@ -78,9 +78,9 @@ public class PlayerCombat : MonoBehaviour
         }
 
         var gm = GameManager.Instance;
-        SetBlocking(gm.TieneCarton && input.Block.IsPressed() && !CartonRoto && !IsAttacking);
+        SetBlocking(gm.TieneCarton && input.BlockHeld && !CartonRoto && !IsAttacking);
 
-        if (gm.TieneBotella && input.Attack.WasPressedThisFrame() && !IsBlocking)
+        if (gm.TieneBotella && input.AttackPressed && !IsBlocking)
         {
             if (IsAttacking) attackBuffered = true;
             else if (Time.time >= nextAttackAllowedTime) StartAttack();

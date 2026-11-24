@@ -68,9 +68,9 @@ public class PlayerController : MonoBehaviour
             return;
         }
 
-        moveInput = input.Move.ReadValue<float>();
-        if (input.Jump.WasPressedThisFrame()) jumpPressed = true;
-        if (input.Jump.WasReleasedThisFrame()) jumpReleased = true;
+        moveInput = input.MoveValue;
+        if (input.JumpPressed) jumpPressed = true;
+        if (input.JumpReleased) jumpReleased = true;
 
         if (!MovementLocked && knockbackTimer <= 0f)
         {
